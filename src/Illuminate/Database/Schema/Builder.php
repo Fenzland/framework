@@ -226,7 +226,7 @@ class Builder
      */
     protected function build(Blueprint $blueprint)
     {
-        $blueprint->build($this->connection, $this->grammar);
+        $blueprint->build($this->grammar);
     }
 
     /**
