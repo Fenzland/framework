@@ -458,8 +458,12 @@ class Blueprint
      * @param  int  $length
      * @return \Illuminate\Support\Fluent
      */
-    public function char($column, $length = 255)
+    public function char($column, $length = null)
     {
+        if (is_null($length)) {
+            $length=$this->connection->getConfig('char_default_length', 255);
+        }
+
         return $this->addColumn('char', $column, compact('length'));
     }
 
@@ -470,8 +474,12 @@ class Blueprint
      * @param  int  $length
      * @return \Illuminate\Support\Fluent
      */
-    public function string($column, $length = 255)
+    public function string($column, $length = null)
     {
+        if (is_null($length)) {
+            $length=$this->connection->getConfig('char_default_length', 255);
+        }
+
         return $this->addColumn('string', $column, compact('length'));
     }
 
