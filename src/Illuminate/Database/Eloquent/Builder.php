@@ -1328,6 +1328,12 @@ class Builder
             return $this->toBase()->{$method}(...$parameters);
         }
 
+        if (method_exists($this->model, $query = 'query'.ucfirst($method))) {
+            array_unshift($parameters, $this);
+
+            return call_user_func_array([$this->model, $query], $parameters);
+        }
+
         $this->query->{$method}(...$parameters);
 
         return $this;
