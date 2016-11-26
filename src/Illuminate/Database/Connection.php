@@ -1042,9 +1042,9 @@ class Connection implements ConnectionInterface
      * @param  string  $option
      * @return mixed
      */
-    public function getConfig($option)
+    public function getConfig($option, $default = null)
     {
-        return Arr::get($this->config, $option);
+        return Arr::get($this->config, $option, $default);
     }
 
     /**
