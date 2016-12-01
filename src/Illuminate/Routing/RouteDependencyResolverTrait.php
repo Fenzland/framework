@@ -38,6 +38,7 @@ trait RouteDependencyResolverTrait
     public function resolveMethodDependencies(array $parameters, ReflectionFunctionAbstract $reflector)
     {
         $originalParameters = $parameters;
+        $nameOrderParameters= [];
 
         foreach ($reflector->getParameters() as $key => $parameter) {
             $instance = $this->transformDependency(
@@ -47,9 +48,11 @@ trait RouteDependencyResolverTrait
             if (! is_null($instance)) {
                 $this->spliceIntoParameters($parameters, $key, $instance);
             }
+
+            $nameOrderParameters[]= $instance?:$originalParameters[$parameter->name]??null;
         }
 
-        return $parameters;
+        return $nameOrderParameters;
     }
 
     /**
