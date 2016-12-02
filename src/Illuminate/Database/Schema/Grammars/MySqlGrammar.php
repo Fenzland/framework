@@ -72,6 +72,10 @@ class MySqlGrammar extends Grammar
             $sql .= ' engine = '.$engine;
         }
 
+        if (isset($blueprint->comment)) {
+            $sql .= ' comment = \'' . str_replace("'", '', $blueprint->comment) . "'";
+        }
+
         return $sql;
     }
 
