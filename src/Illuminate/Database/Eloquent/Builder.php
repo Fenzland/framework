@@ -12,6 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
+/**
+ * @mixin \Illuminate\Database\Query\Builder
+ */
 class Builder
 {
     /**
@@ -435,7 +438,7 @@ class Builder
      */
     public function each(callable $callback, $count = 1000)
     {
-        if (is_null($this->query->orders) && is_null($this->query->unionOrders)) {
+        if (empty($this->query->orders) && empty($this->query->unionOrders)) {
             $this->orderBy($this->model->getQualifiedKeyName(), 'asc');
         }
 
@@ -494,7 +497,9 @@ class Builder
 
         $total = $query->getCountForPagination();
 
-        $results = $total ? $this->forPage($page, $perPage)->get($columns) : new Collection;
+        $results = $total
+            ? $this->forPage($page, $perPage)->get($columns)
+            : $this->model->newCollection();
 
         return new LengthAwarePaginator($results, $total, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
@@ -1125,9 +1130,17 @@ class Builder
             // constraints have been specified for the eager load and we'll just put
             // an empty Closure with the loader so that we can treat all the same.
             if (is_numeric($name)) {
-                $f = function () {
-                    //
-                };
+                if (Str::contains($constraints, ':')) {
+                    list($constraints, $columns) = explode(':', $constraints);
+
+                    $f = function ($q) use ($columns) {
+                        $q->select(explode(',', $columns));
+                    };
+                } else {
+                    $f = function () {
+                        //
+                    };
+                }
 
                 list($name, $constraints) = [$constraints, $f];
             }

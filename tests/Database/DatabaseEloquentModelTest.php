@@ -147,6 +147,18 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $this->assertEmpty($instance->getEagerLoads());
     }
 
+    public function testEagerLoadingWithColumns()
+    {
+        $model = new EloquentModelWithoutRelationStub;
+        $instance = $model->newInstance()->newQuery()->with('foo:bar,baz', 'hadi');
+        $builder = m::mock(Builder::class);
+        $builder->shouldReceive('select')->once()->with(['bar', 'baz']);
+        $this->assertNotNull($instance->getEagerLoads()['hadi']);
+        $this->assertNotNull($instance->getEagerLoads()['foo']);
+        $closure = $instance->getEagerLoads()['foo'];
+        $closure($builder);
+    }
+
     public function testWithMethodCallsQueryBuilderCorrectlyWithArray()
     {
         $result = EloquentModelWithStub::with(['foo', 'bar']);
@@ -792,6 +804,26 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = (new EloquentModelSaveStub)->forceFill(['id' => 21]);
         $this->assertEquals(21, $model->id);
+    }
+
+    public function testFillingJSONAttributes()
+    {
+        $model = new EloquentModelStub;
+        $model->fillable(['meta->name', 'meta->price', 'meta->size->width']);
+        $model->fill(['meta->name' => 'foo', 'meta->price' => 'bar', 'meta->size->width' => 'baz']);
+        $this->assertEquals(
+            ['meta' => json_encode(['name' => 'foo', 'price' => 'bar', 'size' => ['width' => 'baz']])],
+            $model->toArray()
+        );
+
+
+        $model = new EloquentModelStub(['meta' => json_encode(['name' => 'Taylor'])]);
+        $model->fillable(['meta->name', 'meta->price', 'meta->size->width']);
+        $model->fill(['meta->name' => 'foo', 'meta->price' => 'bar', 'meta->size->width' => 'baz']);
+        $this->assertEquals(
+            ['meta' => json_encode(['name' => 'foo', 'price' => 'bar', 'size' => ['width' => 'baz']])],
+            $model->toArray()
+        );
     }
 
     public function testUnguardAllowsAnythingToBeSet()
