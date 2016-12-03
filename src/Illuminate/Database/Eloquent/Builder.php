@@ -491,7 +491,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         $query = $this->toBase();
 
@@ -520,7 +520,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         $this->skip(($page - 1) * $perPage)->take($perPage + 1);
 
