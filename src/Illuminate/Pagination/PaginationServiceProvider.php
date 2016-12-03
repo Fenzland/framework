@@ -46,5 +46,19 @@ class PaginationServiceProvider extends ServiceProvider
 
             return 1;
         });
+
+        Paginator::perPageResolver(function ($default) {
+            $request= $this->app['request'];
+
+            if ($request->hasCookie('Pagination-PerPage')) {
+                $perPage = $request->cookie('Pagination-PerPage');
+
+                if (filter_var($perPage, FILTER_VALIDATE_INT) !== false && (int) $perPage >= 1) {
+                    return $perPage;
+                }
+            }
+
+            return $default;
+        });
     }
 }
