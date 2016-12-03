@@ -771,7 +771,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         $results = ($total = $this->toBase()->getCountForPagination())
                                     ? $this->forPage($page, $perPage)->get($columns)
@@ -796,7 +796,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         // Next we will set the limit and offset for this query so that when we get the
         // results we get the proper section of results. Then, we'll create the full
