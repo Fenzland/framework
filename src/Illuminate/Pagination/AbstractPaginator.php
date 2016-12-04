@@ -150,6 +150,10 @@ abstract class AbstractPaginator implements Htmlable
             $page = 1;
         }
 
+        if (preg_match("/[\\?&]{$this->pageName}=/", $this->path)) {
+            return preg_replace("/([\\?&]{$this->pageName}=)[^&]*/", '${1}'.$page, $this->path);
+        }
+
         // If we have any extra query string key / value pairs that need to be added
         // onto the URL, we will put them in query string form and then attach it
         // to the URL. This allows for extra information like sortings storage.
