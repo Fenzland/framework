@@ -74,6 +74,13 @@ abstract class AbstractPaginator implements Htmlable
     protected static $currentPageResolver;
 
     /**
+     * The per page resolver callback.
+     *
+     * @var \Closure
+     */
+    protected static $perPageResolver;
+
+    /**
      * The view factory resolver callback.
      *
      * @var \Closure
@@ -133,6 +140,10 @@ abstract class AbstractPaginator implements Htmlable
     {
         if ($page <= 0) {
             $page = 1;
+        }
+
+        if (preg_match("/[\\?&]{$this->pageName}=/", $this->path)) {
+            return preg_replace("/([\\?&]{$this->pageName}=)[^&]*/", '${1}'.$page, $this->path);
         }
 
         // If we have any extra query string key / value pairs that need to be added
@@ -365,6 +376,33 @@ abstract class AbstractPaginator implements Htmlable
     public static function currentPageResolver(Closure $resolver)
     {
         static::$currentPageResolver = $resolver;
+    }
+
+    /**
+     * Resolve the current page or return the default value.
+     *
+     * @param  string  $pageName
+     * @param  int  $default
+     * @return int
+     */
+    public static function resolvePerPage($default = 15)
+    {
+        if (isset(static::$perPageResolver)) {
+            return call_user_func(static::$perPageResolver, $default) ?: $default;
+        }
+
+        return $default;
+    }
+
+    /**
+     * Set the per page resolver callback.
+     *
+     * @param  \Closure  $resolver
+     * @return void
+     */
+    public static function perPageResolver(Closure $resolver)
+    {
+        static::$perPageResolver = $resolver;
     }
 
     /**
