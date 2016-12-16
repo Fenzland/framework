@@ -96,6 +96,14 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($c->isEmpty());
     }
 
+    public function testEmptyCollectionIsNotEmpty()
+    {
+        $c = new Collection(['foo', 'bar']);
+
+        $this->assertFalse($c->isEmpty());
+        $this->assertTrue($c->isNotEmpty());
+    }
+
     public function testCollectionIsConstructed()
     {
         $collection = new Collection('foo');
@@ -1365,6 +1373,12 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
 
         $c = new Collection([1, 2, 3, 4, 5]);
         $this->assertEquals(1, $c->min());
+
+        $c = new Collection([1, null, 3, 4, 5]);
+        $this->assertEquals(1, $c->min());
+
+        $c = new Collection([0, 1, 2, 3, 4]);
+        $this->assertEquals(0, $c->min());
 
         $c = new Collection();
         $this->assertNull($c->min());
