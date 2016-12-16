@@ -131,4 +131,24 @@ class TokenGuard implements Guard
 
         return $this;
     }
+
+    /**
+     * Determine if the current user is authenticated.
+     *
+     * @return bool
+     */
+    public function check()
+    {
+        $user = $this->user();
+
+        if (is_null($user)) {
+            return false;
+        }
+
+        if (isset($user->token_expired_at) && $user->token_expired_at instanceof \Carbon\Carbon && \Carbon\Carbon::now()>$user->token_expired_at) {
+            return false;
+        }
+
+        return true;
+    }
 }
