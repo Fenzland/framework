@@ -10,13 +10,6 @@ use Illuminate\Contracts\Cache\Repository as Cache;
 class CallbackEvent extends Event
 {
     /**
-     * The cache store implementation.
-     *
-     * @var \Illuminate\Contracts\Cache\Repository
-     */
-    protected $cache;
-
-    /**
      * The callback to call.
      *
      * @var string
@@ -44,7 +37,7 @@ class CallbackEvent extends Event
     {
         if (! is_string($callback) && ! is_callable($callback)) {
             throw new InvalidArgumentException(
-                'Invalid scheduled callback event. Must be string or callable.'
+                'Invalid scheduled callback event. Must be a string or callable.'
             );
         }
 
@@ -115,7 +108,7 @@ class CallbackEvent extends Event
      *
      * @return string
      */
-    protected function mutexName()
+    public function mutexName()
     {
         return 'framework/schedule-'.sha1($this->description);
     }

@@ -22,15 +22,13 @@ class RedisServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('redis', function ($app) {
-            $servers = $app['config']['database.redis'];
+            $config = $app->make('config')->get('database.redis');
 
-            $client = Arr::pull($servers, 'client', 'predis');
+            return new RedisManager(Arr::pull($config, 'client', 'predis'), $config);
+        });
 
-            if ($client === 'phpredis') {
-                return new PhpRedisDatabase($servers);
-            } else {
-                return new PredisDatabase($servers);
-            }
+        $this->app->bind('redis.connection', function ($app) {
+            return $app['redis']->connection();
         });
     }
 
@@ -41,6 +39,6 @@ class RedisServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['redis'];
+        return ['redis', 'redis.connection'];
     }
 }

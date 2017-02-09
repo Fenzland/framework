@@ -1,20 +1,110 @@
 # Release Notes for 5.3.x
 
-## [Unreleased]
+## v5.3.30 (2017-01-26)
+
+### Added
+- Added `read()` and `unread()` methods to `DatabaseNotification` ([#17243](https://github.com/laravel/framework/pull/17243))
+
+### Changed
+- Show seed output prior to running, instead of after ([#17318](https://github.com/laravel/framework/pull/17318))
+- Support starting slash in `elixir()` helper ([#17359](https://github.com/laravel/framework/pull/17359))
+
+### Fixed
+- Use regex in `KeyGenerateCommand` to match `APP_KEY` ([#17151](https://github.com/laravel/framework/pull/17151))
+- Fixed integrity constraints for database session driver ([#17301](https://github.com/laravel/framework/pull/17301))
+
+
+## v5.3.29 (2017-01-06)
+
+### Added
+- Added `Blueprint::nullableMorphs()` ([#16879](https://github.com/laravel/framework/pull/16879))
+- Support `BaseCollection` in `BelongsToMany::sync()` ([#16882](https://github.com/laravel/framework/pull/16882))
+- Added `--model` flag to `make:controller` command ([#16787](https://github.com/laravel/framework/pull/16787))
+- Allow notifications to be broadcasted now instead of using the queue ([#16867](https://github.com/laravel/framework/pull/16867), [40f30f1](https://github.com/laravel/framework/commit/40f30f1a2131904eb4f6e6c456823e7b2cb726eb))
+- Support `redirectTo()` in `RedirectsUsers` ([#16896](https://github.com/laravel/framework/pull/16896))
+- Added `ArrayTransport` to mail component to store Swift messages in memory ([#16906](https://github.com/laravel/framework/pull/16906), [69d3d04](https://github.com/laravel/framework/commit/69d3d0463cf6bd114d2beecd8480556efb168678))
+- Added fallback to `SlackAttachment` notification ([#16912](https://github.com/laravel/framework/pull/16912))
+- Added `Macroable` trait to `RedirectResponse` ([#16929](https://github.com/laravel/framework/pull/16929))
+- Support namespaces when using `make:policy --model` ([#16981](https://github.com/laravel/framework/pull/16981))
+- Added `HourlyAt()` option for scheduled events ([#17168](https://github.com/laravel/framework/pull/17168))
+
+### Changed
+- Allow SparkPost transport transmission metadata to be set at runtime ([#16838](https://github.com/laravel/framework/pull/16838))
+- Pass keys to `Collection::unique()` callback ([#16883](https://github.com/laravel/framework/pull/16883))
+- Support calling `MailFake::send()` when `build()` has dependencies ([#16918](https://github.com/laravel/framework/pull/16918))
+- Changed `Mailable` properties visibility to public ([#16916](https://github.com/laravel/framework/pull/16916))
+- Bind `serve` command to `127.0.0.1` instead of `localhost` ([#16937](https://github.com/laravel/framework/pull/16937))
+- Added `old('remember')` call to `login.stub` ([#16944](https://github.com/laravel/framework/pull/16944))
+- Check for `db` before setting presence verifier in `ValidationServiceProvider` ([038840d](https://github.com/laravel/framework/commit/038840d477e606735f9179d97eeb20639450e8ae))
+- Make Eloquent's `getTimeZone()` method call adhere to `DateTimeInterface` ([#16955](https://github.com/laravel/framework/pull/16955))
+- Support customizable response in `SendsPasswordResetEmails` ([#16982](https://github.com/laravel/framework/pull/16982))
+- Stricter comparison when replacing URL for `LocalAdapter` ([#17097](https://github.com/laravel/framework/pull/17097))
+- Use `notification()` relationship in `HasDatabaseNotifications` ([#17093](https://github.com/laravel/framework/pull/17093))
+- Allow float value as expiration in Memcached cache store ([#17106](https://github.com/laravel/framework/pull/17106))
+
+### Fixed
+- Fixed a wildcard issue with `sometimes` validation rule ([#16826](https://github.com/laravel/framework/pull/16826))
+- Prevent error when SqlServer port is empty ([#16824](https://github.com/laravel/framework/pull/16824))
+- Reverted false-positive fix for `date_format` validation [#16692](https://github.com/laravel/framework/pull/16692) ([#16845](https://github.com/laravel/framework/pull/16845))
+- Fixed `withCount()` aliasing using multiple tables ([#16853](https://github.com/laravel/framework/pull/16853))
+- Fixed broken event interface listening ([#16877](https://github.com/laravel/framework/pull/16877))
+- Fixed empty model creation ([#16864](https://github.com/laravel/framework/pull/16864))
+- Fixed column overlapping on using `withCount()` on `BelongsToMany` ([#16895](https://github.com/laravel/framework/pull/16895))
+- Fixed `Unique::ignore()` issue ([#16948](https://github.com/laravel/framework/pull/16948))
+- Fixed logic in `ChannelManager::sendNow()` if `$channels` is `null` ([#17068](https://github.com/laravel/framework/pull/17068))
+- Fixed validating distinct for nested keys ([#17102](https://github.com/laravel/framework/pull/17102))
+- Fixed `HasManyThrough::updateOrCreate()` ([#17105](https://github.com/laravel/framework/pull/17105))
+
+### Security
+- Changed SwiftMailer version to `~5.4` ([#17131](https://github.com/laravel/framework/pull/17131))
+
+
+## v5.3.28 (2016-12-15)
+
+### Changed
+- Refactored `ControllerMakeCommand` class ([59a1ce2](https://github.com/laravel/framework/commit/59a1ce21413221131aaf0086cd1eb7c887c701c0))
+
+### Fixed
+- Fixed implicit Router binding through IoC ([#16802](https://github.com/laravel/framework/pull/16802))
+- `Collection::min()` incorrectly excludes `0` when calculating minimum ([#16821](https://github.com/laravel/framework/pull/16821))
+
+
+## v5.3.27 (2016-12-15)
 
 ### Added
 - Added `Authenticatable::$rememberTokenName` ([#16617](https://github.com/laravel/framework/pull/16617), [38612c0](https://github.com/laravel/framework/commit/38612c0e88a48cca5744cc464a764b976f79a46d))
 - Added `Collection::partition()` method ([#16627](https://github.com/laravel/framework/pull/16627), [#16644](https://github.com/laravel/framework/pull/16644))
+- Added resource routes translations ([#16429](https://github.com/laravel/framework/pull/16429), [e91f04b](https://github.com/laravel/framework/commit/e91f04b52603194dbc90dbbaee730e171bee1449))
+- Allow `TokenGuard` API token to be sent through as input ([#16766](https://github.com/laravel/framework/pull/16766))
+- Added `Collection::isNotEmpty()` ([#16797](https://github.com/laravel/framework/pull/16797))
+- Added "evidence" to the list of uncountable words ([#16788](https://github.com/laravel/framework/pull/16788))
+- Added `reply_to` to mailer config ([#16810](https://github.com/laravel/framework/pull/16810), [dc2ce4f](https://github.com/laravel/framework/commit/dc2ce4f9efb831a304e1c2674aae1dfd819b9c56))
 
 ### Changed
 - Added missing `$useReadPdo` argument to `Connection::selectOne()` ([#16625](https://github.com/laravel/framework/pull/16625))
 - Preload some files required by already listed files ([#16648](https://github.com/laravel/framework/pull/16648))
+- Clone query for chunking ([53f97a0](https://github.com/laravel/framework/commit/53f97a014da380dc85fb4b0d826475e562d78dcc), [32d0f16](https://github.com/laravel/framework/commit/32d0f164424ab5b4a2bff2ed927812ae49bd8051))
+- Return a regular `PDO` object if a persistent connection is requested ([#16702](https://github.com/laravel/framework/pull/16702), [6b413d5](https://github.com/laravel/framework/commit/6b413d5b416c1e0b629a3036e6c3ad84b3b76a6e))
+- Global `to` address now also applied for the `cc` and `bcc` options of an email ([#16705](https://github.com/laravel/framework/pull/16705))
+- Don't report exceptions inside queue worker signal handler ([#16738](https://github.com/laravel/framework/pull/16738))
+- Kill timed out queue worker process ([#16746](https://github.com/laravel/framework/pull/16746))
+- Removed unnecessary check in `ScheduleRunCommand::fire()` ([#16752](https://github.com/laravel/framework/pull/16752))
+- Only guess the ability's name if no fully qualified class name was given ([#16807](https://github.com/laravel/framework/pull/16807), [f79839e](https://github.com/laravel/framework/commit/f79839e4b72999a67d5503bbb8437547cab87236))
+- Remove falsy values from array in `min()` and `max()` on `Collection` ([e2d317e](https://github.com/laravel/framework/commit/e2d317efcebbdf6651d89100c0b5d80a925bb2f1))
 
 ### Fixed
-- Added file existance check to `AppNameCommand::replaceIn()` to fix [#16575](https://github.com/laravel/framework/pull/16575) ([#16592](https://github.com/laravel/framework/pull/16592))
+- Added file existence check to `AppNameCommand::replaceIn()` to fix [#16575](https://github.com/laravel/framework/pull/16575) ([#16592](https://github.com/laravel/framework/pull/16592))
 - Check for `null` in `seeJsonStructure()` ([#16642](https://github.com/laravel/framework/pull/16642))
 - Reverted [#15264](https://github.com/laravel/framework/pull/15264) ([#16660](https://github.com/laravel/framework/pull/16660))
 - Fixed misleading credentials exception when `ExceptionHandler` is not bound in container ([#16666](https://github.com/laravel/framework/pull/16666))
+- Use `sync` as queue name for Sync Queues ([#16681](https://github.com/laravel/framework/pull/16681))
+- Fixed `storedAs()` and `virtualAs()` issue ([#16683](https://github.com/laravel/framework/pull/16683))
+- Fixed false-positive `date_format` validation ([#16692](https://github.com/laravel/framework/pull/16692))
+- Use translator `trans()` method in `Validator` ([#16778](https://github.com/laravel/framework/pull/16778))
+- Fixed runtime error in `RouteServiceProvider` when `Route` facade is not available ([#16775](https://github.com/laravel/framework/pull/16775))
+
+### Removed
+- Removed hard coded prose from scheduled task email subject ([#16790](https://github.com/laravel/framework/pull/16790))
 
 
 ## v5.3.26 (2016-11-30)
@@ -283,7 +373,7 @@
 - Added missing `$minutes` property on `CookieSessionHandler` ([#15664](https://github.com/laravel/framework/pull/15664))
 
 ### Changed
-- Removed forking and pcntl requirements while still supporting timeouts ([#15650](https://github.com/laravel/framework/pull/15650))
+- Removed forking and PCNTL requirements while still supporting timeouts ([#15650](https://github.com/laravel/framework/pull/15650))
 - Set exception handler first thing in `WorkCommand::runWorker()` ([99994fe](https://github.com/laravel/framework/commit/99994fe23c1215d5a8e798da03947e6a5502b8f9))
 
 

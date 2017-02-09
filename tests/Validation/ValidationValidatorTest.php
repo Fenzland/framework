@@ -1,13 +1,17 @@
 <?php
 
+namespace Illuminate\Tests\Validation;
+
+use DateTime;
 use Mockery as m;
 use Carbon\Carbon;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Validation\Validator;
 use Illuminate\Validation\Rules\Exists;
 use Illuminate\Validation\Rules\Unique;
 use Symfony\Component\HttpFoundation\File\File;
 
-class ValidationValidatorTest extends PHPUnit_Framework_TestCase
+class ValidationValidatorTest extends TestCase
 {
     public function tearDown()
     {
@@ -30,7 +34,7 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
     {
         $trans = $this->getIlluminateArrayTranslator();
         $v = new Validator($trans, ['foo' => 'bar', 'baz' => 'boom'], ['foo' => 'Same:baz']);
-        $v->setContainer(new Illuminate\Container\Container);
+        $v->setContainer(new \Illuminate\Container\Container);
         $v->after(function ($validator) {
             $_SERVER['__validator.after.test'] = true;
 
@@ -398,9 +402,12 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
                 ],
             ],
         ]);
-        $v = new Validator($trans, ['name' => ['', ''], 'lang' => ['en' => '']], []);
-        $v->each('name', 'required|max:255');
-        $v->each('lang.*', 'required|max:255');
+
+        $v = new Validator($trans, ['name' => ['', ''], 'lang' => ['en' => '']], [
+            'name.*' => 'required|max:255',
+            'lang.*' => 'required|max:255',
+        ]);
+
         $this->assertFalse($v->passes());
         $v->messages()->setFormat(':message');
         $this->assertEquals('all are really required!', $v->messages()->first('name.0'));
@@ -421,8 +428,7 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
                 ],
             ],
         ]);
-        $v = new Validator($trans, ['validation' => ['custom' => ['string', 'string']]], []);
-        $v->each('validation.custom', 'integer');
+        $v = new Validator($trans, ['validation' => ['custom' => ['string', 'string']]], ['validation.custom.*' => 'integer']);
         $this->assertFalse($v->passes());
         $v->messages()->setFormat(':message');
         $this->assertEquals('should be integer!', $v->messages()->first('validation.custom.0'));
@@ -447,8 +453,7 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
     public function testInlineValidationMessagesAreRespectedWithAsterisks()
     {
         $trans = $this->getIlluminateArrayTranslator();
-        $v = new Validator($trans, ['name' => ['', '']], [], ['name.*.required' => 'all must be required!']);
-        $v->each('name', 'required|max:255');
+        $v = new Validator($trans, ['name' => ['', '']], ['name.*' => 'required|max:255'], ['name.*.required' => 'all must be required!']);
         $this->assertFalse($v->passes());
         $v->messages()->setFormat(':message');
         $this->assertEquals('all must be required!', $v->messages()->first('name.0'));
@@ -474,7 +479,7 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $v = new Validator($trans, ['foo' => [1, 2, 3]], ['foo' => 'Array']);
         $this->assertTrue($v->passes());
 
-        $v = new Validator($trans, ['foo' => new Symfony\Component\HttpFoundation\File\File('/tmp/foo', false)], ['foo' => 'Array']);
+        $v = new Validator($trans, ['foo' => new \Symfony\Component\HttpFoundation\File\File('/tmp/foo', false)], ['foo' => 'Array']);
         $this->assertFalse($v->passes());
     }
 
@@ -889,6 +894,9 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
 
         $v = new Validator($trans, ['foo' => '1e2', 'baz' => '100'], ['foo' => 'Same:baz']);
         $this->assertFalse($v->passes());
+
+        $v = new Validator($trans, ['foo' => null, 'baz' => null], ['foo' => 'Same:baz']);
+        $this->assertTrue($v->passes());
     }
 
     public function testValidateDifferent()
@@ -1338,6 +1346,9 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($v->passes());
 
         $v = new Validator($trans, ['foo' => ['bar' => ['id' => 1], 'baz' => ['id' => 2]]], ['foo.*.id' => 'distinct']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['foo' => [['id' => 1, 'nested' => ['id' => 1]]]], ['foo.*.id' => 'distinct']);
         $this->assertTrue($v->passes());
 
         $v = new Validator($trans, ['foo' => [['id' => 1], ['id' => 1]]], ['foo.*.id' => 'distinct']);
@@ -1951,7 +1962,7 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
     public function testValidateFile()
     {
         $trans = $this->getIlluminateArrayTranslator();
-        $file = new Symfony\Component\HttpFoundation\File\UploadedFile(__FILE__, '', null, null, null, true);
+        $file = new \Symfony\Component\HttpFoundation\File\UploadedFile(__FILE__, '', null, null, null, true);
 
         $v = new Validator($trans, ['x' => '1'], ['x' => 'file']);
         $this->assertTrue($v->fails());
@@ -2133,8 +2144,23 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $v = new Validator($trans, ['x' => '22000-01-01'], ['x' => 'date_format:Y-m-d']);
         $this->assertTrue($v->fails());
 
+        $v = new Validator($trans, ['x' => '00-01-01'], ['x' => 'date_format:Y-m-d']);
+        $this->assertTrue($v->fails());
+
         $v = new Validator($trans, ['x' => ['Not', 'a', 'date']], ['x' => 'date_format:Y-m-d']);
         $this->assertTrue($v->fails());
+
+        $v = new Validator($trans, ['x' => '2000-01-01T00:00:00Atlantic/Azores'], ['x' => 'date_format:Y-m-d\TH:i:se']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['x' => '2000-01-01T00:00:00Z'], ['x' => 'date_format:Y-m-d\TH:i:sT']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['x' => '2000-01-01T00:00:00+0000'], ['x' => 'date_format:Y-m-d\TH:i:sO']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['x' => '2000-01-01T00:00:00+00:30'], ['x' => 'date_format:Y-m-d\TH:i:sP']);
+        $this->assertTrue($v->passes());
     }
 
     public function testBeforeAndAfter()
@@ -2298,6 +2324,13 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
             return $i->x == 'foo';
         });
         $this->assertEquals(['x' => ['Required', 'Confirmed']], $v->getRules());
+
+        $trans = $this->getIlluminateArrayTranslator();
+        $v = new Validator($trans, ['x' => ''], ['y' => 'Required']);
+        $v->sometimes('x', 'Required', function ($i) {
+            return true;
+        });
+        $this->assertEquals(['x' => ['Required'], 'y' => ['Required']], $v->getRules());
 
         $trans = $this->getIlluminateArrayTranslator();
         $v = new Validator($trans, ['x' => 'foo'], ['x' => 'Required']);
@@ -2487,13 +2520,21 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($v->passes());
     }
 
-    public function testSometimesFailOnEmptyArrayInImplicitRules()
+    /**
+     * @group validation
+     */
+    public function testSometimesOnArraysInImplicitRules()
     {
         $trans = $this->getIlluminateArrayTranslator();
 
-        $data = ['names' => [['second' => []]]];
-        $v = new Validator($trans, $data, ['names.*.second' => 'sometimes|required']);
+        // $data = ['names' => [['second' => []]]];
+        // $v = new Validator($trans, $data, ['names.*.second' => 'sometimes|required']);
+        // $this->assertFalse($v->passes());
+
+        $data = ['names' => [['second' => ['Taylor']]]];
+        $v = new Validator($trans, $data, ['names.*.second' => 'sometimes|required|string']);
         $this->assertFalse($v->passes());
+        $this->assertEquals(['validation.string'], $v->errors()->get('names.0.second'));
     }
 
     public function testValidateImplicitEachWithAsterisksForRequiredNonExistingKey()
@@ -2584,6 +2625,13 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($v->fails());
     }
 
+    public function testCoveringEmptyKeys()
+    {
+        $trans = $this->getIlluminateArrayTranslator();
+        $v = new Validator($trans, ['foo' => ['' => ['bar' => '']]], ['foo.*.bar' => 'required']);
+        $this->assertTrue($v->fails());
+    }
+
     public function testImplicitEachWithAsterisksWithArrayValues()
     {
         $trans = $this->getIlluminateArrayTranslator();
@@ -2592,6 +2640,9 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($v->passes());
 
         $v = new Validator($trans, ['foo' => [1, 2, 3, 4]], ['foo' => 'size:4']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['foo' => [1, 2, 3, 4]], ['foo.*' => 'integer', 'foo.0' => 'required']);
         $this->assertTrue($v->passes());
 
         $v = new Validator($trans, ['foo' => [['bar' => [1, 2, 3]], ['bar' => [1, 2, 3]]]], ['foo.*.bar' => 'size:4']);
@@ -3087,69 +3138,24 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($v->fails());
     }
 
-    public function testValidateEachWithNonIndexedArray()
-    {
-        $trans = $this->getIlluminateArrayTranslator();
-        $data = ['foobar' => [
-            ['key' => 'foo', 'value' => 5],
-            ['key' => 'foo', 'value' => 10],
-            ['key' => 'foo', 'value' => 16],
-        ]];
-
-        $v = new Validator($trans, $data, ['foo' => 'Array']);
-        $v->each('foobar', ['key' => 'required', 'value' => 'numeric|min:6|max:14']);
-        $this->assertFalse($v->passes());
-
-        $v = new Validator($trans, $data, ['foo' => 'Array']);
-        $v->each('foobar', ['key' => 'required', 'value' => 'numeric|min:4|max:16']);
-        $this->assertTrue($v->passes());
-    }
-
-    public function testValidateEachWithNonArrayWithArrayRule()
-    {
-        $trans = $this->getIlluminateArrayTranslator();
-        $v = new Validator($trans, ['foo' => 'string'], ['foo' => 'Array']);
-        $v->each('foo', ['min:7|max:13']);
-        $this->assertFalse($v->passes());
-    }
-
-    public function testValidateEachWithNonArrayWithoutArrayRule()
-    {
-        $trans = $this->getIlluminateArrayTranslator();
-        $v = new Validator($trans, ['foo' => 'string'], ['foo' => 'numeric']);
-        $v->each('foo', ['min:7|max:13']);
-        $this->assertFalse($v->passes());
-    }
-
     public function testGetLeadingExplicitAttributePath()
     {
-        $trans = $this->getIlluminateArrayTranslator();
-        $v = new Validator($trans, [], []);
-
-        $method = new ReflectionMethod(Validator::class, 'getLeadingExplicitAttributePath');
-
-        $method->setAccessible(true);
-
-        $this->assertEquals(null, $method->invoke($v, '*.email'));
-        $this->assertEquals('foo', $method->invoke($v, 'foo.*'));
-        $this->assertEquals('foo.bar', $method->invoke($v, 'foo.bar.*.baz'));
-        $this->assertEquals('foo.bar.1', $method->invoke($v, 'foo.bar.1'));
+        $this->assertEquals(null, \Illuminate\Validation\ValidationData::getLeadingExplicitAttributePath('*.email'));
+        $this->assertEquals('foo', \Illuminate\Validation\ValidationData::getLeadingExplicitAttributePath('foo.*'));
+        $this->assertEquals('foo.bar', \Illuminate\Validation\ValidationData::getLeadingExplicitAttributePath('foo.bar.*.baz'));
+        $this->assertEquals('foo.bar.1', \Illuminate\Validation\ValidationData::getLeadingExplicitAttributePath('foo.bar.1'));
     }
 
     public function testExtractDataFromPath()
     {
-        $method = new ReflectionMethod(Validator::class, 'extractDataFromPath');
-        $method->setAccessible(true);
-        $trans = $this->getIlluminateArrayTranslator();
+        $data = [['email' => 'mail'], ['email' => 'mail2']];
+        $this->assertEquals([['email' => 'mail'], ['email' => 'mail2']], \Illuminate\Validation\ValidationData::extractDataFromPath(null, $data));
 
-        $v = new Validator($trans, [['email' => 'mail'], ['email' => 'mail2']], []);
-        $this->assertEquals([['email' => 'mail'], ['email' => 'mail2']], $method->invoke($v, null));
+        $data = ['cat' => ['cat1' => ['name']], ['cat2' => ['name2']]];
+        $this->assertEquals(['cat' => ['cat1' => ['name']]], \Illuminate\Validation\ValidationData::extractDataFromPath('cat.cat1', $data));
 
-        $v = new Validator($trans, ['cat' => ['cat1' => ['name']], ['cat2' => ['name2']]], []);
-        $this->assertEquals(['cat' => ['cat1' => ['name']]], $method->invoke($v, 'cat.cat1'));
-
-        $v = new Validator($trans, ['cat' => ['cat1' => ['name' => '1', 'price' => 1]], ['cat2' => ['name' => 2]]], []);
-        $this->assertEquals(['cat' => ['cat1' => ['name' => '1']]], $method->invoke($v, 'cat.cat1.name'));
+        $data = ['cat' => ['cat1' => ['name' => '1', 'price' => 1]], ['cat2' => ['name' => 2]]];
+        $this->assertEquals(['cat' => ['cat1' => ['name' => '1']]], \Illuminate\Validation\ValidationData::extractDataFromPath('cat.cat1.name', $data));
     }
 
     public function testInlineMessagesMayUseAsteriskForEachRules()
@@ -3263,8 +3269,8 @@ class ValidationValidatorTest extends PHPUnit_Framework_TestCase
 
     public function getIlluminateArrayTranslator()
     {
-        return new Illuminate\Translation\Translator(
-            new Illuminate\Translation\ArrayLoader, 'en'
+        return new \Illuminate\Translation\Translator(
+            new \Illuminate\Translation\ArrayLoader, 'en'
         );
     }
 }

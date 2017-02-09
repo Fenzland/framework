@@ -1,9 +1,14 @@
 <?php
 
+namespace Illuminate\Tests\Support;
+
+use stdClass;
+use ArrayObject;
 use Illuminate\Support\Arr;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Support\Collection;
 
-class SupportArrTest extends PHPUnit_Framework_TestCase
+class SupportArrTest extends TestCase
 {
     public function testAccessible()
     {
@@ -296,6 +301,16 @@ class SupportArrTest extends PHPUnit_Framework_TestCase
 
         $array = Arr::pluck($array, 'developer.name');
 
+        $this->assertEquals(['Taylor', 'Abigail'], $array);
+    }
+
+    public function testPluckWithArrayValue()
+    {
+        $array = [
+            ['developer' => ['name' => 'Taylor']],
+            ['developer' => ['name' => 'Abigail']],
+        ];
+        $array = Arr::pluck($array, ['developer', 'name']);
         $this->assertEquals(['Taylor', 'Abigail'], $array);
     }
 

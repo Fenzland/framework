@@ -1,11 +1,14 @@
 <?php
 
+namespace Illuminate\Tests\Foundation;
+
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithDatabase;
 
-class FoundationInteractsWithDatabaseTest extends PHPUnit_Framework_TestCase
+class FoundationInteractsWithDatabaseTest extends TestCase
 {
     use InteractsWithDatabase;
 

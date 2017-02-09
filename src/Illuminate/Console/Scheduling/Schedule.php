@@ -17,6 +17,13 @@ class Schedule
     protected $cache;
 
     /**
+     * All of the events on the schedule.
+     *
+     * @var array
+     */
+    protected $events = [];
+
+    /**
      * Create a new event instance.
      *
      * @param  \Illuminate\Contracts\Cache\Repository  $cache
@@ -26,13 +33,6 @@ class Schedule
     {
         $this->cache = $cache;
     }
-
-    /**
-     * All of the events on the schedule.
-     *
-     * @var array
-     */
-    protected $events = [];
 
     /**
      * Add a new callback event to the schedule.
@@ -106,16 +106,6 @@ class Schedule
     }
 
     /**
-     * Get all of the events on the schedule.
-     *
-     * @return array
-     */
-    public function events()
-    {
-        return $this->events;
-    }
-
-    /**
      * Get all of the events on the schedule that are due.
      *
      * @param  \Illuminate\Contracts\Foundation\Application  $app
@@ -123,8 +113,16 @@ class Schedule
      */
     public function dueEvents($app)
     {
-        return array_filter($this->events, function ($event) use ($app) {
-            return $event->isDue($app);
-        });
+        return collect($this->events)->filter->isDue($app);
+    }
+
+    /**
+     * Get all of the events on the schedule.
+     *
+     * @return array
+     */
+    public function events()
+    {
+        return $this->events;
     }
 }

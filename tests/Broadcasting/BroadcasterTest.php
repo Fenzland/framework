@@ -1,12 +1,15 @@
 <?php
 
+namespace Illuminate\Tests\Broadcasting;
+
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Routing\BindingRegistrar;
 use Illuminate\Broadcasting\Broadcasters\Broadcaster;
 
-class BroadcasterTest extends PHPUnit_Framework_TestCase
+class BroadcasterTest extends TestCase
 {
     public function tearDown()
     {
@@ -62,7 +65,7 @@ class BroadcasterTest extends PHPUnit_Framework_TestCase
         $broadcaster = new FakeBroadcaster();
         $callback = function ($user, BroadcasterTestEloquentModelNotFoundStub $model) {
         };
-        $parameters = $broadcaster->extractAuthParameters('asd.{model}', 'asd.1', $callback);
+        $broadcaster->extractAuthParameters('asd.{model}', 'asd.1', $callback);
     }
 }
 

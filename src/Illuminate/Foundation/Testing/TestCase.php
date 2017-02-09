@@ -3,17 +3,19 @@
 namespace Illuminate\Foundation\Testing;
 
 use Mockery;
-use PHPUnit_Framework_TestCase;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Console\Application as Artisan;
+use PHPUnit\Framework\TestCase as BaseTestCase;
 
-abstract class TestCase extends PHPUnit_Framework_TestCase
+abstract class TestCase extends BaseTestCase
 {
     use Concerns\InteractsWithContainer,
         Concerns\MakesHttpRequests,
         Concerns\InteractsWithAuthentication,
         Concerns\InteractsWithConsole,
         Concerns\InteractsWithDatabase,
+        Concerns\InteractsWithSession,
         Concerns\MocksApplicationServices;
 
     /**
@@ -84,8 +86,6 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
      */
     protected function refreshApplication()
     {
-        putenv('APP_ENV=testing');
-
         $this->app = $this->createApplication();
     }
 
@@ -144,6 +144,8 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
 
         $this->afterApplicationCreatedCallbacks = [];
         $this->beforeApplicationDestroyedCallbacks = [];
+
+        Artisan::forgetBootstrappers();
     }
 
     /**

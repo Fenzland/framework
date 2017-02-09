@@ -1,11 +1,16 @@
 <?php
 
+namespace Illuminate\Tests\Queue;
+
 use Mockery as m;
+use Carbon\Carbon;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Queue\RedisQueue;
 use Illuminate\Container\Container;
 use Illuminate\Queue\Jobs\RedisJob;
+use Illuminate\Tests\Redis\InteractsWithRedis;
 
-class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
+class RedisQueueIntegrationTest extends TestCase
 {
     use InteractsWithRedis;
 
@@ -16,6 +21,7 @@ class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        Carbon::setTestNow();
         parent::setUp();
         $this->setUpRedis();
 
@@ -25,6 +31,7 @@ class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
+        Carbon::setTestNow(Carbon::now());
         parent::tearDown();
         $this->tearDownRedis();
         m::close();
@@ -68,7 +75,7 @@ class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($job, unserialize(json_decode($redisJob->getRawBody())->data->command));
         $this->assertEquals(1, $redisJob->attempts());
         $this->assertEquals($job, unserialize(json_decode($redisJob->getReservedJob())->data->command));
-        $this->assertEquals(2, json_decode($redisJob->getReservedJob())->attempts);
+        $this->assertEquals(1, json_decode($redisJob->getReservedJob())->attempts);
         $this->assertEquals($redisJob->getJobId(), json_decode($redisJob->getReservedJob())->id);
 
         // Check reserved queue
@@ -205,7 +212,7 @@ class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
         //check the content of delayed queue
         $this->assertEquals(1, $this->redis->connection()->zcard('queues:default:delayed'));
 
-        $results = $this->redis->connection()->zrangebyscore('queues:default:delayed', -INF, INF, 'withscores');
+        $results = $this->redis->connection()->zrangebyscore('queues:default:delayed', -INF, INF, ['WITHSCORES' => true]);
 
         $payload = array_keys($results)[0];
 
@@ -216,7 +223,7 @@ class RedisQueueIntegrationTest extends PHPUnit_Framework_TestCase
 
         $decoded = json_decode($payload);
 
-        $this->assertEquals(2, $decoded->attempts);
+        $this->assertEquals(1, $decoded->attempts);
         $this->assertEquals($job, unserialize($decoded->data->command));
 
         //check if the queue has no ready item yet

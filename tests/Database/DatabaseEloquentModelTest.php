@@ -1,18 +1,28 @@
 <?php
 
+namespace Illuminate\Tests\Database;
+
+use DateTime;
+use stdClass;
+use Exception;
 use Mockery as m;
+use LogicException;
+use ReflectionClass;
+use DateTimeImmutable;
+use DateTimeInterface;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
+class DatabaseEloquentModelTest extends TestCase
 {
     public function tearDown()
     {
         m::close();
 
-        Illuminate\Database\Eloquent\Model::unsetEventDispatcher();
-        Carbon\Carbon::resetToStringFormat();
+        \Illuminate\Database\Eloquent\Model::unsetEventDispatcher();
+        \Carbon\Carbon::resetToStringFormat();
     }
 
     public function testAttributeManipulation()
@@ -81,31 +91,8 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = new EloquentModelStub;
         $instance = $model->newInstance(['name' => 'taylor']);
-        $this->assertInstanceOf('EloquentModelStub', $instance);
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelStub', $instance);
         $this->assertEquals('taylor', $instance->name);
-    }
-
-    public function testHydrateCreatesCollectionOfModels()
-    {
-        $data = [['name' => 'Taylor'], ['name' => 'Otwell']];
-        $collection = EloquentModelStub::hydrate($data, 'foo_connection');
-
-        $this->assertInstanceOf('Illuminate\Database\Eloquent\Collection', $collection);
-        $this->assertCount(2, $collection);
-        $this->assertInstanceOf('EloquentModelStub', $collection[0]);
-        $this->assertInstanceOf('EloquentModelStub', $collection[1]);
-        $this->assertEquals($collection[0]->getAttributes(), $collection[0]->getOriginal());
-        $this->assertEquals($collection[1]->getAttributes(), $collection[1]->getOriginal());
-        $this->assertEquals('Taylor', $collection[0]->name);
-        $this->assertEquals('Otwell', $collection[1]->name);
-        $this->assertEquals('foo_connection', $collection[0]->getConnectionName());
-        $this->assertEquals('foo_connection', $collection[1]->getConnectionName());
-    }
-
-    public function testHydrateRawMakesRawQuery()
-    {
-        $collection = EloquentModelHydrateRawStub::hydrateRaw('SELECT ?', ['foo']);
-        $this->assertEquals('hydrated', $collection);
     }
 
     public function testCreateMethodSavesNewModel()
@@ -167,7 +154,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateProcess()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('where')->once()->with('id', '=', 1);
         $query->shouldReceive('update')->once()->with(['name' => 'taylor'])->andReturn(1);
@@ -190,7 +177,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateProcessDoesntOverrideTimestamps()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('where')->once()->with('id', '=', 1);
         $query->shouldReceive('update')->once()->with(['created_at' => 'foo', 'updated_at' => 'bar'])->andReturn(1);
@@ -209,7 +196,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testSaveIsCancelledIfSavingEventReturnsFalse()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
         $model->setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
@@ -221,7 +208,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateIsCancelledIfUpdatingEventReturnsFalse()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
         $model->setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
@@ -235,7 +222,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testEventsCanBeFiredWithCustomEventObjects()
     {
-        $model = $this->getMockBuilder('EloquentModelEventObjectStub')->setMethods(['newQueryWithoutScopes'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelEventObjectStub')->setMethods(['newQueryWithoutScopes'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
         $model->setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
@@ -247,7 +234,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateProcessWithoutTimestamps()
     {
-        $model = $this->getMockBuilder('EloquentModelEventObjectStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'fireModelEvent'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelEventObjectStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'fireModelEvent'])->getMock();
         $model->timestamps = false;
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('where')->once()->with('id', '=', 1);
@@ -265,7 +252,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateUsesOldPrimaryKey()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('where')->once()->with('id', '=', 1);
         $query->shouldReceive('update')->once()->with(['id' => 2, 'foo' => 'bar'])->andReturn(1);
@@ -288,7 +275,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testTimestampsAreReturnedAsObjects()
     {
-        $model = $this->getMockBuilder('EloquentDateModelStub')->setMethods(['getDateFormat'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentDateModelStub')->setMethods(['getDateFormat'])->getMock();
         $model->expects($this->any())->method('getDateFormat')->will($this->returnValue('Y-m-d'));
         $model->setRawAttributes([
             'created_at' => '2012-12-04',
@@ -301,7 +288,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testTimestampsAreReturnedAsObjectsFromPlainDatesAndTimestamps()
     {
-        $model = $this->getMockBuilder('EloquentDateModelStub')->setMethods(['getDateFormat'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentDateModelStub')->setMethods(['getDateFormat'])->getMock();
         $model->expects($this->any())->method('getDateFormat')->will($this->returnValue('Y-m-d H:i:s'));
         $model->setRawAttributes([
             'created_at' => '2012-12-04',
@@ -315,11 +302,11 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testTimestampsAreReturnedAsObjectsOnCreate()
     {
         $timestamps = [
-            'created_at' => Carbon\Carbon::now(),
-            'updated_at' => Carbon\Carbon::now(),
+            'created_at' => \Carbon\Carbon::now(),
+            'updated_at' => \Carbon\Carbon::now(),
         ];
         $model = new EloquentDateModelStub;
-        Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
+        \Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
         $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('StdClass'));
         $mockConnection->shouldReceive('getQueryGrammar')->andReturn($mockConnection);
         $mockConnection->shouldReceive('getDateFormat')->andReturn('Y-m-d H:i:s');
@@ -331,11 +318,11 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testDateTimeAttributesReturnNullIfSetToNull()
     {
         $timestamps = [
-            'created_at' => Carbon\Carbon::now(),
-            'updated_at' => Carbon\Carbon::now(),
+            'created_at' => \Carbon\Carbon::now(),
+            'updated_at' => \Carbon\Carbon::now(),
         ];
         $model = new EloquentDateModelStub;
-        Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
+        \Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
         $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('StdClass'));
         $mockConnection->shouldReceive('getQueryGrammar')->andReturn($mockConnection);
         $mockConnection->shouldReceive('getDateFormat')->andReturn('Y-m-d H:i:s');
@@ -368,7 +355,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = new EloquentModelStub();
 
-        $value = Carbon\Carbon::parse('2015-04-17 22:59:01');
+        $value = \Carbon\Carbon::parse('2015-04-17 22:59:01');
         $this->assertEquals('2015-04-17 22:59:01', $model->fromDateTime($value));
 
         $value = new DateTime('2015-04-17 22:59:01');
@@ -396,7 +383,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testInsertProcess()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -414,7 +401,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1, $model->id);
         $this->assertTrue($model->exists);
 
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insert')->once()->with(['name' => 'taylor']);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -436,7 +423,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testInsertIsCancelledIfCreatingEventReturnsFalse()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
         $model->setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
@@ -462,7 +449,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testPushNoRelations()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -478,7 +465,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testPushEmptyOneRelation()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -496,7 +483,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testPushOneRelation()
     {
-        $related1 = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $related1 = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'related1'], 'id')->andReturn(2);
         $related1->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -504,7 +491,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $related1->name = 'related1';
         $related1->exists = false;
 
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -525,7 +512,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testPushEmptyManyRelation()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -533,7 +520,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
         $model->name = 'taylor';
         $model->exists = false;
-        $model->setRelation('relationMany', new Illuminate\Database\Eloquent\Collection([]));
+        $model->setRelation('relationMany', new \Illuminate\Database\Eloquent\Collection([]));
 
         $this->assertTrue($model->push());
         $this->assertEquals(1, $model->id);
@@ -543,7 +530,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testPushManyRelation()
     {
-        $related1 = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $related1 = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'related1'], 'id')->andReturn(2);
         $related1->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -551,7 +538,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $related1->name = 'related1';
         $related1->exists = false;
 
-        $related2 = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $related2 = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'related2'], 'id')->andReturn(3);
         $related2->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -559,7 +546,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $related2->name = 'related2';
         $related2->exists = false;
 
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with(['name' => 'taylor'], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -567,7 +554,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
         $model->name = 'taylor';
         $model->exists = false;
-        $model->setRelation('relationMany', new Illuminate\Database\Eloquent\Collection([$related1, $related2]));
+        $model->setRelation('relationMany', new \Illuminate\Database\Eloquent\Collection([$related1, $related2]));
 
         $this->assertTrue($model->push());
         $this->assertEquals(1, $model->id);
@@ -609,7 +596,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testConnectionManagement()
     {
         EloquentModelStub::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
-        $model = m::mock('EloquentModelStub[getConnectionName,connection]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[getConnectionName,connection]');
 
         $retval = $model->setConnection('foo');
         $this->assertEquals($retval, $model);
@@ -628,12 +615,12 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $model->age = null;
         $model->password = 'password1';
         $model->setHidden(['password']);
-        $model->setRelation('names', new Illuminate\Database\Eloquent\Collection([
+        $model->setRelation('names', new \Illuminate\Database\Eloquent\Collection([
             new EloquentModelStub(['bar' => 'baz']), new EloquentModelStub(['bam' => 'boom']),
         ]));
         $model->setRelation('partner', new EloquentModelStub(['name' => 'abby']));
         $model->setRelation('group', null);
-        $model->setRelation('multi', new Illuminate\Database\Eloquent\Collection);
+        $model->setRelation('multi', new \Illuminate\Database\Eloquent\Collection);
         $array = $model->toArray();
 
         $this->assertInternalType('array', $array);
@@ -692,7 +679,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testToArraySnakeAttributes()
     {
         $model = new EloquentModelStub;
-        $model->setRelation('namesList', new Illuminate\Database\Eloquent\Collection([
+        $model->setRelation('namesList', new \Illuminate\Database\Eloquent\Collection([
             new EloquentModelStub(['bar' => 'baz']), new EloquentModelStub(['bam' => 'boom']),
         ]));
         $array = $model->toArray();
@@ -701,7 +688,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('boom', $array['names_list'][1]['bam']);
 
         $model = new EloquentModelCamelStub;
-        $model->setRelation('namesList', new Illuminate\Database\Eloquent\Collection([
+        $model->setRelation('namesList', new \Illuminate\Database\Eloquent\Collection([
             new EloquentModelStub(['bar' => 'baz']), new EloquentModelStub(['bam' => 'boom']),
         ]));
         $array = $model->toArray();
@@ -860,7 +847,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Illuminate\Database\Eloquent\MassAssignmentException
+     * @expectedException \Illuminate\Database\Eloquent\MassAssignmentException
      */
     public function testGlobalGuarded()
     {
@@ -905,25 +892,25 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->hasOne('EloquentModelSaveStub');
-        $this->assertEquals('save_stub.eloquent_model_stub_id', $relation->getForeignKey());
+        $relation = $model->hasOne('Illuminate\Tests\Database\EloquentModelSaveStub');
+        $this->assertEquals('save_stub.eloquent_model_stub_id', $relation->getQualifiedForeignKeyName());
 
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->hasOne('EloquentModelSaveStub', 'foo');
-        $this->assertEquals('save_stub.foo', $relation->getForeignKey());
+        $relation = $model->hasOne('Illuminate\Tests\Database\EloquentModelSaveStub', 'foo');
+        $this->assertEquals('save_stub.foo', $relation->getQualifiedForeignKeyName());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
     }
 
     public function testMorphOneCreatesProperRelation()
     {
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->morphOne('EloquentModelSaveStub', 'morph');
-        $this->assertEquals('save_stub.morph_id', $relation->getForeignKey());
-        $this->assertEquals('save_stub.morph_type', $relation->getMorphType());
-        $this->assertEquals('EloquentModelStub', $relation->getMorphClass());
+        $relation = $model->morphOne('Illuminate\Tests\Database\EloquentModelSaveStub', 'morph');
+        $this->assertEquals('save_stub.morph_id', $relation->getQualifiedForeignKeyName());
+        $this->assertEquals('save_stub.morph_type', $relation->getQualifiedMorphType());
+        $this->assertEquals('Illuminate\Tests\Database\EloquentModelStub', $relation->getMorphClass());
     }
 
     public function testCorrectMorphClassIsReturned()
@@ -932,7 +919,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $model = new EloquentModelStub;
 
         try {
-            $this->assertEquals('EloquentModelStub', $model->getMorphClass());
+            $this->assertEquals('Illuminate\Tests\Database\EloquentModelStub', $model->getMorphClass());
         } finally {
             Relation::morphMap([], false);
         }
@@ -942,25 +929,26 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->hasMany('EloquentModelSaveStub');
-        $this->assertEquals('save_stub.eloquent_model_stub_id', $relation->getForeignKey());
+        $relation = $model->hasMany('Illuminate\Tests\Database\EloquentModelSaveStub');
+        $this->assertEquals('save_stub.eloquent_model_stub_id', $relation->getQualifiedForeignKeyName());
 
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->hasMany('EloquentModelSaveStub', 'foo');
-        $this->assertEquals('save_stub.foo', $relation->getForeignKey());
+        $relation = $model->hasMany('Illuminate\Tests\Database\EloquentModelSaveStub', 'foo');
+
+        $this->assertEquals('save_stub.foo', $relation->getQualifiedForeignKeyName());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
     }
 
     public function testMorphManyCreatesProperRelation()
     {
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->morphMany('EloquentModelSaveStub', 'morph');
-        $this->assertEquals('save_stub.morph_id', $relation->getForeignKey());
-        $this->assertEquals('save_stub.morph_type', $relation->getMorphType());
-        $this->assertEquals('EloquentModelStub', $relation->getMorphClass());
+        $relation = $model->morphMany('Illuminate\Tests\Database\EloquentModelSaveStub', 'morph');
+        $this->assertEquals('save_stub.morph_id', $relation->getQualifiedForeignKeyName());
+        $this->assertEquals('save_stub.morph_type', $relation->getQualifiedMorphType());
+        $this->assertEquals('Illuminate\Tests\Database\EloquentModelStub', $relation->getMorphClass());
     }
 
     public function testBelongsToCreatesProperRelation()
@@ -970,7 +958,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $relation = $model->belongsToStub();
         $this->assertEquals('belongs_to_stub_id', $relation->getForeignKey());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
 
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
@@ -989,7 +977,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('morph_to_stub_type', $relation->getMorphType());
         $this->assertEquals('morphToStub', $relation->getRelation());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
 
         // $this->morphTo(null, 'type', 'id');
         $relation2 = $model->morphToStubWithKeys();
@@ -1014,20 +1002,21 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     {
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->belongsToMany('EloquentModelSaveStub');
-        $this->assertEquals('eloquent_model_save_stub_eloquent_model_stub.eloquent_model_stub_id', $relation->getForeignKey());
-        $this->assertEquals('eloquent_model_save_stub_eloquent_model_stub.eloquent_model_save_stub_id', $relation->getOtherKey());
+
+        $relation = $model->belongsToMany('Illuminate\Tests\Database\EloquentModelSaveStub');
+        $this->assertEquals('eloquent_model_save_stub_eloquent_model_stub.eloquent_model_stub_id', $relation->getQualifiedForeignKeyName());
+        $this->assertEquals('eloquent_model_save_stub_eloquent_model_stub.eloquent_model_save_stub_id', $relation->getQualifiedRelatedKeyName());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
         $this->assertEquals(__FUNCTION__, $relation->getRelationName());
 
         $model = new EloquentModelStub;
         $this->addMockConnection($model);
-        $relation = $model->belongsToMany('EloquentModelSaveStub', 'table', 'foreign', 'other');
-        $this->assertEquals('table.foreign', $relation->getForeignKey());
-        $this->assertEquals('table.other', $relation->getOtherKey());
+        $relation = $model->belongsToMany('Illuminate\Tests\Database\EloquentModelSaveStub', 'table', 'foreign', 'other');
+        $this->assertEquals('table.foreign', $relation->getQualifiedForeignKeyName());
+        $this->assertEquals('table.other', $relation->getQualifiedRelatedKeyName());
         $this->assertSame($model, $relation->getParent());
-        $this->assertInstanceOf('EloquentModelSaveStub', $relation->getQuery()->getModel());
+        $this->assertInstanceOf('Illuminate\Tests\Database\EloquentModelSaveStub', $relation->getQuery()->getModel());
     }
 
     public function testRelationsWithVariedConnections()
@@ -1036,78 +1025,78 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasOne('EloquentNoConnectionModelStub');
+        $relation = $model->hasOne('Illuminate\Tests\Database\EloquentNoConnectionModelStub');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasOne('EloquentDifferentConnectionModelStub');
+        $relation = $model->hasOne('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
 
         // Morph One
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->morphOne('EloquentNoConnectionModelStub', 'type');
+        $relation = $model->morphOne('Illuminate\Tests\Database\EloquentNoConnectionModelStub', 'type');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->morphOne('EloquentDifferentConnectionModelStub', 'type');
+        $relation = $model->morphOne('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub', 'type');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
 
         // Belongs to
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->belongsTo('EloquentNoConnectionModelStub');
+        $relation = $model->belongsTo('Illuminate\Tests\Database\EloquentNoConnectionModelStub');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->belongsTo('EloquentDifferentConnectionModelStub');
+        $relation = $model->belongsTo('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
 
         // has many
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasMany('EloquentNoConnectionModelStub');
+        $relation = $model->hasMany('Illuminate\Tests\Database\EloquentNoConnectionModelStub');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasMany('EloquentDifferentConnectionModelStub');
+        $relation = $model->hasMany('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
 
         // has many through
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasManyThrough('EloquentNoConnectionModelStub', 'EloquentModelSaveStub');
+        $relation = $model->hasManyThrough('Illuminate\Tests\Database\EloquentNoConnectionModelStub', 'Illuminate\Tests\Database\EloquentModelSaveStub');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->hasManyThrough('EloquentDifferentConnectionModelStub', 'EloquentModelSaveStub');
+        $relation = $model->hasManyThrough('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub', 'Illuminate\Tests\Database\EloquentModelSaveStub');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
 
         // belongs to many
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->belongsToMany('EloquentNoConnectionModelStub');
+        $relation = $model->belongsToMany('Illuminate\Tests\Database\EloquentNoConnectionModelStub');
         $this->assertEquals('non_default', $relation->getRelated()->getConnectionName());
 
         $model = new EloquentModelStub;
         $model->setConnection('non_default');
         $this->addMockConnection($model);
-        $relation = $model->belongsToMany('EloquentDifferentConnectionModelStub');
+        $relation = $model->belongsToMany('Illuminate\Tests\Database\EloquentDifferentConnectionModelStub');
         $this->assertEquals('different_connection', $relation->getRelated()->getConnectionName());
     }
 
@@ -1118,7 +1107,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $model = new EloquentModelWithoutTableStub;
         $this->assertEquals('eloquent_model_without_table_stubs', $model->getTable());
 
-        $namespacedModel = new Foo\Bar\EloquentModelNamespacedStub;
+        $namespacedModel = new \Foo\Bar\EloquentModelNamespacedStub;
         $this->assertEquals('eloquent_model_namespaced_stubs', $namespacedModel->getTable());
     }
 
@@ -1173,8 +1162,8 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testModelObserversCanBeAttachedToModels()
     {
         EloquentModelStub::setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
-        $events->shouldReceive('listen')->once()->with('eloquent.creating: EloquentModelStub', 'EloquentTestObserverStub@creating', 0);
-        $events->shouldReceive('listen')->once()->with('eloquent.saved: EloquentModelStub', 'EloquentTestObserverStub@saved', 0);
+        $events->shouldReceive('listen')->once()->with('eloquent.creating: Illuminate\Tests\Database\EloquentModelStub', 'Illuminate\Tests\Database\EloquentTestObserverStub@creating');
+        $events->shouldReceive('listen')->once()->with('eloquent.saved: Illuminate\Tests\Database\EloquentModelStub', 'Illuminate\Tests\Database\EloquentTestObserverStub@saved');
         $events->shouldReceive('forget');
         EloquentModelStub::observe(new EloquentTestObserverStub);
         EloquentModelStub::flushEventListeners();
@@ -1183,10 +1172,10 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
     public function testModelObserversCanBeAttachedToModelsWithString()
     {
         EloquentModelStub::setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
-        $events->shouldReceive('listen')->once()->with('eloquent.creating: EloquentModelStub', 'EloquentTestObserverStub@creating', 0);
-        $events->shouldReceive('listen')->once()->with('eloquent.saved: EloquentModelStub', 'EloquentTestObserverStub@saved', 0);
+        $events->shouldReceive('listen')->once()->with('eloquent.creating: Illuminate\Tests\Database\EloquentModelStub', 'Illuminate\Tests\Database\EloquentTestObserverStub@creating');
+        $events->shouldReceive('listen')->once()->with('eloquent.saved: Illuminate\Tests\Database\EloquentModelStub', 'Illuminate\Tests\Database\EloquentTestObserverStub@saved');
         $events->shouldReceive('forget');
-        EloquentModelStub::observe('EloquentTestObserverStub');
+        EloquentModelStub::observe('Illuminate\Tests\Database\EloquentTestObserverStub');
         EloquentModelStub::flushEventListeners();
     }
 
@@ -1304,7 +1293,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testIncrementOnExistingModelCallsQueryAndSetsAttribute()
     {
-        $model = m::mock('EloquentModelStub[newQuery]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[newQuery]');
         $model->exists = true;
         $model->id = 1;
         $model->syncOriginalAttribute('id');
@@ -1325,12 +1314,12 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $relation = $this->getMockBuilder('Illuminate\Database\Eloquent\Relations\BelongsTo')->setMethods(['touch'])->disableOriginalConstructor()->getMock();
         $relation->expects($this->once())->method('touch');
 
-        $model = m::mock('EloquentModelStub[partner]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[partner]');
         $this->addMockConnection($model);
         $model->shouldReceive('partner')->once()->andReturn($relation);
         $model->setTouchedRelations(['partner']);
 
-        $mockPartnerModel = m::mock('EloquentModelStub[touchOwners]');
+        $mockPartnerModel = m::mock('Illuminate\Tests\Database\EloquentModelStub[touchOwners]');
         $mockPartnerModel->shouldReceive('touchOwners')->once();
         $model->setRelation('partner', $mockPartnerModel);
 
@@ -1342,7 +1331,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $relation = $this->getMockBuilder('Illuminate\Database\Eloquent\Relations\BelongsTo')->setMethods(['touch'])->disableOriginalConstructor()->getMock();
         $relation->expects($this->once())->method('touch');
 
-        $model = m::mock('EloquentModelStub[partner]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[partner]');
         $this->addMockConnection($model);
         $model->shouldReceive('partner')->once()->andReturn($relation);
         $model->setTouchedRelations(['partner']);
@@ -1407,6 +1396,18 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('1969-07-20 00:00:00', $arr['dateAttribute']);
         $this->assertEquals('1969-07-20 22:56:00', $arr['datetimeAttribute']);
         $this->assertEquals(-14173440, $arr['timestampAttribute']);
+    }
+
+    public function testModelDateAttributeCastingResetsTime()
+    {
+        $model = new EloquentModelCastingStub;
+        $model->setDateFormat('Y-m-d H:i:s');
+        $model->dateAttribute = '1969-07-20 22:56:00';
+
+        $this->assertEquals('1969-07-20 00:00:00', $model->dateAttribute->toDateTimeString());
+
+        $arr = $model->toArray();
+        $this->assertEquals('1969-07-20 00:00:00', $arr['dateAttribute']);
     }
 
     public function testModelAttributeCastingPreservesNull()
@@ -1485,7 +1486,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testNonExistingAttributeWithInternalMethodNameDoesntCallMethod()
     {
-        $model = m::mock('EloquentModelStub[delete,getRelationValue]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[delete,getRelationValue]');
         $model->name = 'Spark';
         $model->shouldNotReceive('delete');
         $model->shouldReceive('getRelationValue')->once()->with('belongsToStub')->andReturn('relation');
@@ -1499,14 +1500,14 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
         // Returns null for a Model.php method name
         $this->assertNull($model->delete);
 
-        $model = m::mock('EloquentModelStub[delete]');
+        $model = m::mock('Illuminate\Tests\Database\EloquentModelStub[delete]');
         $model->delete = 123;
         $this->assertEquals(123, $model->delete);
     }
 
     public function testIntKeyTypePreserved()
     {
-        $model = $this->getMockBuilder('EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with([], 'id')->andReturn(1);
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -1517,7 +1518,7 @@ class DatabaseEloquentModelTest extends PHPUnit_Framework_TestCase
 
     public function testStringKeyTypePreserved()
     {
-        $model = $this->getMockBuilder('EloquentKeyTypeModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
+        $model = $this->getMockBuilder('Illuminate\Tests\Database\EloquentKeyTypeModelStub')->setMethods(['newQueryWithoutScopes', 'updateTimestamps', 'refresh'])->getMock();
         $query = m::mock('Illuminate\Database\Eloquent\Builder');
         $query->shouldReceive('insertGetId')->once()->with([], 'id')->andReturn('string id');
         $model->expects($this->once())->method('newQueryWithoutScopes')->will($this->returnValue($query));
@@ -1602,7 +1603,7 @@ class EloquentModelStub extends Model
     public $scopesCalled = [];
     protected $table = 'stub';
     protected $guarded = [];
-    protected $morph_to_stub_type = 'EloquentModelSaveStub';
+    protected $morph_to_stub_type = 'Illuminate\Tests\Database\EloquentModelSaveStub';
 
     public function getListItemsAttribute($value)
     {
@@ -1631,7 +1632,7 @@ class EloquentModelStub extends Model
 
     public function belongsToStub()
     {
-        return $this->belongsTo('EloquentModelSaveStub');
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentModelSaveStub');
     }
 
     public function morphToStub()
@@ -1656,7 +1657,7 @@ class EloquentModelStub extends Model
 
     public function belongsToExplicitKeyStub()
     {
-        return $this->belongsTo('EloquentModelSaveStub', 'foo');
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentModelSaveStub', 'foo');
     }
 
     public function incorrectRelationStub()
@@ -1883,7 +1884,7 @@ class EloquentModelCastingStub extends Model
     }
 }
 
-class EloquentModelDynamicHiddenStub extends Illuminate\Database\Eloquent\Model
+class EloquentModelDynamicHiddenStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'stub';
     protected $guarded = [];
@@ -1894,7 +1895,7 @@ class EloquentModelDynamicHiddenStub extends Illuminate\Database\Eloquent\Model
     }
 }
 
-class EloquentModelDynamicVisibleStub extends Illuminate\Database\Eloquent\Model
+class EloquentModelDynamicVisibleStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'stub';
     protected $guarded = [];
@@ -1905,7 +1906,7 @@ class EloquentModelDynamicVisibleStub extends Illuminate\Database\Eloquent\Model
     }
 }
 
-class EloquentModelNonIncrementingStub extends Illuminate\Database\Eloquent\Model
+class EloquentModelNonIncrementingStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'stub';
     protected $guarded = [];
@@ -1925,7 +1926,7 @@ class EloquentModelSavingEventStub
 {
 }
 
-class EloquentModelEventObjectStub extends Illuminate\Database\Eloquent\Model
+class EloquentModelEventObjectStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $events = [
         'saving' => EloquentModelSavingEventStub::class,

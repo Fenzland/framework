@@ -1,5 +1,11 @@
 <?php
 
+namespace Illuminate\Tests\Queue;
+
+use Mockery;
+use RuntimeException;
+use PHPUnit\Framework\TestCase;
+use Illuminate\Container\Container;
 use Illuminate\Queue\WorkerOptions;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -9,15 +15,25 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\MaxAttemptsExceededException;
 
-class QueueWorkerTest extends PHPUnit_Framework_TestCase
+class QueueWorkerTest extends TestCase
 {
     public $events;
     public $exceptionHandler;
 
-    public function __construct()
+    public function setUp()
     {
         $this->events = Mockery::spy(Dispatcher::class);
         $this->exceptionHandler = Mockery::spy(ExceptionHandler::class);
+
+        Container::setInstance($container = new Container);
+
+        $container->instance(Dispatcher::class, $this->events);
+        $container->instance(ExceptionHandler::class, $this->exceptionHandler);
+    }
+
+    public function tearDown()
+    {
+        Container::setInstance();
     }
 
     public function test_job_can_be_fired()
@@ -115,6 +131,7 @@ class QueueWorkerTest extends PHPUnit_Framework_TestCase
         $job = new WorkerFakeJob(function ($job) {
             $job->attempts++;
         });
+
         $job->attempts = 2;
 
         $worker = $this->getWorker('default', ['queue' => [$job]]);
@@ -167,6 +184,7 @@ class QueueWorkerTest extends PHPUnit_Framework_TestCase
     private function workerOptions(array $overrides = [])
     {
         $options = new WorkerOptions;
+
         foreach ($overrides as $key => $value) {
             $options->{$key} = $value;
         }
@@ -178,9 +196,9 @@ class QueueWorkerTest extends PHPUnit_Framework_TestCase
 /**
  * Fakes.
  */
-class InsomniacWorker extends Illuminate\Queue\Worker
+class InsomniacWorker extends \Illuminate\Queue\Worker
 {
-    public $sleptFor = null;
+    public $sleptFor;
 
     public function sleep($seconds)
     {
@@ -188,7 +206,7 @@ class InsomniacWorker extends Illuminate\Queue\Worker
     }
 }
 
-class WorkerFakeManager extends Illuminate\Queue\QueueManager
+class WorkerFakeManager extends \Illuminate\Queue\QueueManager
 {
     public $connections = [];
 
@@ -242,6 +260,7 @@ class WorkerFakeJob
     public $maxTries;
     public $attempts = 0;
     public $failedWith;
+    public $connectionName;
 
     public function __construct($callback = null)
     {
@@ -285,27 +304,18 @@ class WorkerFakeJob
         return $this->attempts;
     }
 
+    public function markAsFailed()
+    {
+        //
+    }
+
     public function failed($e)
     {
         $this->failedWith = $e;
     }
 
-    public function testJobSleepsWhenAnExceptionIsThrownForADaemonWorker()
+    public function setConnectionName($name)
     {
-        $exceptionHandler = m::mock('Illuminate\Contracts\Debug\ExceptionHandler');
-        $job = m::mock('Illuminate\Contracts\Queue\Job');
-        $job->shouldReceive('fire')->once()->andReturnUsing(function () {
-            throw new RuntimeException;
-        });
-        $worker = m::mock('Illuminate\Queue\Worker', [$manager = m::mock('Illuminate\Queue\QueueManager')])->makePartial();
-        $manager->shouldReceive('connection')->once()->with('connection')->andReturn($connection = m::mock('StdClass'));
-        $manager->shouldReceive('getName')->andReturn('connection');
-        $connection->shouldReceive('pop')->once()->with('queue')->andReturn($job);
-        $worker->shouldReceive('sleep')->once()->with(3);
-
-        $exceptionHandler->shouldReceive('report')->once();
-
-        $worker->setDaemonExceptionHandler($exceptionHandler);
-        $worker->pop('connection', 'queue');
+        $this->connectionName = $name;
     }
 }

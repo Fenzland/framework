@@ -1,7 +1,10 @@
 <?php
 
+namespace Illuminate\Tests\Database;
+
 use Mockery as m;
 use Illuminate\Database\Seeder;
+use PHPUnit\Framework\TestCase;
 
 class TestSeeder extends Seeder
 {
@@ -19,7 +22,7 @@ class TestDepsSeeder extends Seeder
     }
 }
 
-class DatabaseSeederTest extends PHPUnit_Framework_TestCase
+class DatabaseSeederTest extends TestCase
 {
     public function tearDown()
     {

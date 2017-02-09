@@ -1,9 +1,13 @@
 <?php
 
+namespace Illuminate\Tests\Notifications;
+
+use Mockery;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\SlackMessage;
 
-class NotificationSlackChannelTest extends PHPUnit_Framework_TestCase
+class NotificationSlackChannelTest extends TestCase
 {
     public function tearDown()
     {
@@ -18,7 +22,7 @@ class NotificationSlackChannelTest extends PHPUnit_Framework_TestCase
     {
         $notifiable = new NotificationSlackChannelTestNotifiable;
 
-        $channel = new Illuminate\Notifications\Channels\SlackWebhookChannel(
+        $channel = new \Illuminate\Notifications\Channels\SlackWebhookChannel(
             $http = Mockery::mock('GuzzleHttp\Client')
         );
 
@@ -42,6 +46,7 @@ class NotificationSlackChannelTest extends PHPUnit_Framework_TestCase
                             'title' => 'Laravel',
                             'title_link' => 'https://laravel.com',
                             'text' => 'Attachment Content',
+                            'fallback' => 'Attachment Fallback',
                             'fields' => [
                                 [
                                     'title' => 'Project',
@@ -120,7 +125,7 @@ class NotificationSlackChannelTest extends PHPUnit_Framework_TestCase
 
 class NotificationSlackChannelTestNotifiable
 {
-    use Illuminate\Notifications\Notifiable;
+    use \Illuminate\Notifications\Notifiable;
 
     public function routeNotificationForSlack()
     {
@@ -141,6 +146,7 @@ class NotificationSlackChannelTestNotification extends Notification
                         $timestamp->shouldReceive('getTimestamp')->andReturn(1234567890);
                         $attachment->title('Laravel', 'https://laravel.com')
                                    ->content('Attachment Content')
+                                   ->fallback('Attachment Fallback')
                                    ->fields([
                                         'Project' => 'Laravel',
                                     ])

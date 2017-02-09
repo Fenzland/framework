@@ -29,7 +29,7 @@ class SendQueuedNotifications implements ShouldQueue
      *
      * @var array
      */
-    protected $channels = null;
+    protected $channels;
 
     /**
      * Create a new job instance.
@@ -55,5 +55,15 @@ class SendQueuedNotifications implements ShouldQueue
     public function handle(ChannelManager $manager)
     {
         $manager->sendNow($this->notifiables, $this->notification, $this->channels);
+    }
+
+    /**
+     * Get the display name for the queued job.
+     *
+     * @return string
+     */
+    public function displayName()
+    {
+        return get_class($this->notification);
     }
 }

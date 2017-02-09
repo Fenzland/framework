@@ -1,8 +1,11 @@
 <?php
 
-use Mockery as m;
+namespace Illuminate\Tests\Queue;
 
-class QueueRedisJobTest extends PHPUnit_Framework_TestCase
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
+
+class QueueRedisJobTest extends TestCase
 {
     public function tearDown()
     {
@@ -22,7 +25,7 @@ class QueueRedisJobTest extends PHPUnit_Framework_TestCase
     {
         $job = $this->getJob();
         $job->getRedisQueue()->shouldReceive('deleteReserved')->once()
-            ->with('default', json_encode(['job' => 'foo', 'data' => ['data'], 'attempts' => 2]));
+            ->with('default', $job);
 
         $job->delete();
     }
@@ -31,18 +34,19 @@ class QueueRedisJobTest extends PHPUnit_Framework_TestCase
     {
         $job = $this->getJob();
         $job->getRedisQueue()->shouldReceive('deleteAndRelease')->once()
-            ->with('default', json_encode(['job' => 'foo', 'data' => ['data'], 'attempts' => 2]), 1);
+            ->with('default', $job, 1);
 
         $job->release(1);
     }
 
     protected function getJob()
     {
-        return new Illuminate\Queue\Jobs\RedisJob(
-            m::mock(Illuminate\Container\Container::class),
-            m::mock(Illuminate\Queue\RedisQueue::class),
+        return new \Illuminate\Queue\Jobs\RedisJob(
+            m::mock(\Illuminate\Container\Container::class),
+            m::mock(\Illuminate\Queue\RedisQueue::class),
             json_encode(['job' => 'foo', 'data' => ['data'], 'attempts' => 1]),
             json_encode(['job' => 'foo', 'data' => ['data'], 'attempts' => 2]),
+            'connection-name',
             'default'
         );
     }

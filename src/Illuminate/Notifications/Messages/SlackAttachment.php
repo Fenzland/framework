@@ -28,6 +28,13 @@ class SlackAttachment
     public $content;
 
     /**
+     * A plain-text summary of the attachment.
+     *
+     * @var string
+     */
+    public $fallback;
+
+    /**
      * The attachment's color.
      *
      * @var string
@@ -98,6 +105,19 @@ class SlackAttachment
     }
 
     /**
+     * A plain-text summary of the attachment.
+     *
+     * @param  string  $fallback
+     * @return $this
+     */
+    public function fallback($fallback)
+    {
+        $this->fallback = $fallback;
+
+        return $this;
+    }
+
+    /**
      * Set the color of the attachment.
      *
      * @param  string  $color
@@ -113,7 +133,7 @@ class SlackAttachment
     /**
      * Add a field to the attachment.
      *
-     * @param  \Closure|array $title
+     * @param  \Closure|string $title
      * @param  string $content
      * @return $this
      */

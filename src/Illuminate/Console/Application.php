@@ -53,20 +53,9 @@ class Application extends SymfonyApplication implements ApplicationContract
         $this->setAutoExit(false);
         $this->setCatchExceptions(false);
 
-        $events->fire(new Events\ArtisanStarting($this));
+        $events->dispatch(new Events\ArtisanStarting($this));
 
         $this->bootstrap();
-    }
-
-    /**
-     * Format the given command as a fully-qualified executable command.
-     *
-     * @param  string  $string
-     * @return string
-     */
-    public static function formatCommandString($string)
-    {
-        return sprintf('%s %s %s', static::phpBinary(), static::artisanBinary(), $string);
     }
 
     /**
@@ -90,15 +79,14 @@ class Application extends SymfonyApplication implements ApplicationContract
     }
 
     /**
-     * Bootstrap the console application.
+     * Format the given command as a fully-qualified executable command.
      *
-     * @return void
+     * @param  string  $string
+     * @return string
      */
-    protected function bootstrap()
+    public static function formatCommandString($string)
     {
-        foreach (static::$bootstrappers as $bootstrapper) {
-            $bootstrapper($this);
-        }
+        return sprintf('%s %s %s', static::phpBinary(), static::artisanBinary(), $string);
     }
 
     /**
@@ -113,17 +101,40 @@ class Application extends SymfonyApplication implements ApplicationContract
     }
 
     /**
+     * Bootstrap the console application.
+     *
+     * @return void
+     */
+    protected function bootstrap()
+    {
+        foreach (static::$bootstrappers as $bootstrapper) {
+            $bootstrapper($this);
+        }
+    }
+
+    /*
+     * Clear the console application bootstrappers.
+     *
+     * @return void
+     */
+    public static function forgetBootstrappers()
+    {
+        static::$bootstrappers = [];
+    }
+
+    /**
      * Run an Artisan console command by name.
      *
      * @param  string  $command
      * @param  array  $parameters
+     * @param  \Symfony\Component\Console\Output\OutputInterface  $outputBuffer
      * @return int
      */
-    public function call($command, array $parameters = [])
+    public function call($command, array $parameters = [], $outputBuffer = null)
     {
         $parameters = collect($parameters)->prepend($command);
 
-        $this->lastOutput = new BufferedOutput;
+        $this->lastOutput = $outputBuffer ?: new BufferedOutput;
 
         $this->setCatchExceptions(false);
 
@@ -207,11 +218,9 @@ class Application extends SymfonyApplication implements ApplicationContract
      */
     protected function getDefaultInputDefinition()
     {
-        $definition = parent::getDefaultInputDefinition();
-
-        $definition->addOption($this->getEnvironmentOption());
-
-        return $definition;
+        return tap(parent::getDefaultInputDefinition(), function ($definition) {
+            $definition->addOption($this->getEnvironmentOption());
+        });
     }
 
     /**

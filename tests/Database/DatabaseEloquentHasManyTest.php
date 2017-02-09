@@ -1,10 +1,14 @@
 <?php
 
+namespace Illuminate\Tests\Database;
+
+use stdClass;
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DatabaseEloquentHasManyTest extends PHPUnit_Framework_TestCase
+class DatabaseEloquentHasManyTest extends TestCase
 {
     public function tearDown()
     {
@@ -223,7 +227,7 @@ class DatabaseEloquentHasManyTest extends PHPUnit_Framework_TestCase
     }
 }
 
-class EloquentHasManyModelStub extends Illuminate\Database\Eloquent\Model
+class EloquentHasManyModelStub extends \Illuminate\Database\Eloquent\Model
 {
     public $foreign_key = 'foreign.value';
 }

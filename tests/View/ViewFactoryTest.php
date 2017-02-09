@@ -1,9 +1,13 @@
 <?php
 
-use Mockery as m;
-use Illuminate\View\Factory;
+namespace Illuminate\Tests\View;
 
-class ViewFactoryTest extends PHPUnit_Framework_TestCase
+use Mockery as m;
+use ReflectionFunction;
+use Illuminate\View\Factory;
+use PHPUnit\Framework\TestCase;
+
+class ViewFactoryTest extends TestCase
 {
     public function tearDown()
     {
@@ -18,7 +22,7 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
         $factory->getFinder()->shouldReceive('find')->once()->with('view')->andReturn('path.php');
         $factory->getEngineResolver()->shouldReceive('resolve')->once()->with('php')->andReturn($engine = m::mock('Illuminate\View\Engines\EngineInterface'));
         $factory->getFinder()->shouldReceive('addExtension')->once()->with('php');
-        $factory->setDispatcher(new Illuminate\Events\Dispatcher);
+        $factory->setDispatcher(new \Illuminate\Events\Dispatcher);
         $factory->creator('view', function ($view) {
             $_SERVER['__test.view'] = $view;
         });
@@ -61,28 +65,6 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
         $mockView->shouldReceive('render')->once()->andReturn('empty');
 
         $this->assertEquals('empty', $factory->renderEach('view', [], 'iterator', 'foo'));
-    }
-
-    public function testAddANamedViews()
-    {
-        $factory = $this->getFactory();
-        $factory->name('bar', 'foo');
-
-        $this->assertEquals(['foo' => 'bar'], $factory->getNames());
-    }
-
-    public function testMakeAViewFromNamedView()
-    {
-        $factory = $this->getFactory();
-        $factory->getFinder()->shouldReceive('find')->once()->with('view')->andReturn('path.php');
-        $factory->getEngineResolver()->shouldReceive('resolve')->once()->with('php')->andReturn($engine = m::mock('Illuminate\View\Engines\EngineInterface'));
-        $factory->getFinder()->shouldReceive('addExtension')->once()->with('php');
-        $factory->getDispatcher()->shouldReceive('fire');
-        $factory->addExtension('php', 'php');
-        $factory->name('view', 'foo');
-        $view = $factory->of('foo', ['data']);
-
-        $this->assertSame($engine, $view->getEngine());
     }
 
     public function testRawStringsMayBeReturnedFromRenderEach()
@@ -142,18 +124,6 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
         $callback = $factory->composer('foo', function () {
             return 'bar';
         });
-        $callback = $callback[0];
-
-        $this->assertEquals('bar', $callback());
-    }
-
-    public function testComposersAreProperlyRegisteredWithPriority()
-    {
-        $factory = $this->getFactory();
-        $factory->getDispatcher()->shouldReceive('listen')->once()->with('composing: foo', m::type('Closure'), 1);
-        $callback = $factory->composer('foo', function () {
-            return 'bar';
-        }, 1);
         $callback = $callback[0];
 
         $this->assertEquals('bar', $callback());
@@ -243,7 +213,7 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
 
     public function testSectionExtending()
     {
-        $placeholder = Illuminate\View\Factory::parentPlaceholder();
+        $placeholder = \Illuminate\View\Factory::parentPlaceholder('foo');
         $factory = $this->getFactory();
         $factory->startSection('foo');
         echo 'hi '.$placeholder;
@@ -256,7 +226,7 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
 
     public function testSectionMultipleExtending()
     {
-        $placeholder = Illuminate\View\Factory::parentPlaceholder();
+        $placeholder = \Illuminate\View\Factory::parentPlaceholder('foo');
         $factory = $this->getFactory();
         $factory->startSection('foo');
         echo 'hello '.$placeholder.' nice to see you '.$placeholder;
@@ -274,20 +244,21 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
     {
         $factory = $this->getFactory();
         $factory->getFinder()->shouldReceive('find')->andReturn(__DIR__.'/fixtures/component.php');
-        $factory->getEngineResolver()->shouldReceive('resolve')->andReturn(new Illuminate\View\Engines\PhpEngine);
+        $factory->getEngineResolver()->shouldReceive('resolve')->andReturn(new \Illuminate\View\Engines\PhpEngine);
         $factory->getDispatcher()->shouldReceive('fire');
         $factory->startComponent('component', ['name' => 'Taylor']);
         $factory->slot('title');
+        $factory->slot('website', 'laravel.com');
         echo 'title<hr>';
         $factory->endSlot();
         echo 'component';
         $contents = $factory->renderComponent();
-        $this->assertEquals('title<hr> component Taylor', $contents);
+        $this->assertEquals('title<hr> component Taylor laravel.com', $contents);
     }
 
     public function testTranslation()
     {
-        $container = new Illuminate\Container\Container;
+        $container = new \Illuminate\Container\Container;
         $container->instance('translator', $translator = m::mock('StdClass'));
         $translator->shouldReceive('getFromJson')->with('Foo', ['name' => 'taylor'])->andReturn('Bar');
         $factory = $this->getFactory();
@@ -398,19 +369,6 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
         $factory->make('vendor/package::foo.bar');
     }
 
-    public function testMakeWithAlias()
-    {
-        $factory = $this->getFactory();
-        $factory->alias('real', 'alias');
-        $factory->getFinder()->shouldReceive('find')->once()->with('real')->andReturn('path.php');
-        $factory->getEngineResolver()->shouldReceive('resolve')->once()->with('php')->andReturn(m::mock('Illuminate\View\Engines\EngineInterface'));
-        $factory->getDispatcher()->shouldReceive('fire');
-
-        $view = $factory->make('alias');
-
-        $this->assertEquals('real', $view->getName());
-    }
-
     /**
      * @expectedException InvalidArgumentException
      */
@@ -427,7 +385,7 @@ class ViewFactoryTest extends PHPUnit_Framework_TestCase
      */
     public function testExceptionsInSectionsAreThrown()
     {
-        $engine = new Illuminate\View\Engines\CompilerEngine(m::mock('Illuminate\View\Compilers\CompilerInterface'));
+        $engine = new \Illuminate\View\Engines\CompilerEngine(m::mock('Illuminate\View\Compilers\CompilerInterface'));
         $engine->getCompiler()->shouldReceive('getCompiledPath')->andReturnUsing(function ($path) {
             return $path;
         });

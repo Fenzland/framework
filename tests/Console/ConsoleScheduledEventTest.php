@@ -1,10 +1,13 @@
 <?php
 
+namespace Illuminate\Tests\Console;
+
 use Mockery as m;
 use Carbon\Carbon;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Console\Scheduling\Event;
 
-class ConsoleScheduledEventTest extends PHPUnit_Framework_TestCase
+class ConsoleScheduledEventTest extends TestCase
 {
     /**
      * The default configuration timezone.
@@ -51,30 +54,6 @@ class ConsoleScheduledEventTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($event->when(function () {
             return false;
         })->filtersPass($app));
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('*/5 * * * * *', $event->everyFiveMinutes()->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 0 * * * *', $event->daily()->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 3,15 * * * *', $event->twiceDaily(3, 15)->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('*/5 * * * 3 *', $event->everyFiveMinutes()->wednesdays()->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 * * * * *', $event->everyFiveMinutes()->hourly()->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 15 4 * * *', $event->monthlyOn(4, '15:00')->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 0 * * 1-5 *', $event->weekdays()->daily()->getExpression());
-
-        $event = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');
-        $this->assertEquals('0 * * * 1-5 *', $event->weekdays()->hourly()->getExpression());
 
         // chained rules should be commutative
         $eventA = new Event(m::mock('Illuminate\Contracts\Cache\Repository'), 'php foo');

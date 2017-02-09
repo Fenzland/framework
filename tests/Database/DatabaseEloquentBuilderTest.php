@@ -1,11 +1,15 @@
 <?php
 
+namespace Illuminate\Tests\Database;
+
+use StdClass;
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 
-class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
+class DatabaseEloquentBuilderTest extends TestCase
 {
     public function tearDown()
     {
@@ -55,7 +59,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function testFindOrFailMethodThrowsModelNotFoundException()
     {
@@ -67,7 +71,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function testFindOrFailMethodWithManyThrowsModelNotFoundException()
     {
@@ -79,7 +83,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+     * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function testFirstOrFailMethodThrowsModelNotFoundException()
     {
@@ -347,10 +351,10 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['bar', 'baz'], $builder->pluck('name')->all());
     }
 
-    public function testMacrosAreCalledOnBuilder()
+    public function testLocalMacrosAreCalledOnBuilder()
     {
         unset($_SERVER['__test.builder']);
-        $builder = new Illuminate\Database\Eloquent\Builder(new Illuminate\Database\Query\Builder(
+        $builder = new \Illuminate\Database\Eloquent\Builder(new \Illuminate\Database\Query\Builder(
             m::mock('Illuminate\Database\ConnectionInterface'),
             m::mock('Illuminate\Database\Query\Grammars\Grammar'),
             m::mock('Illuminate\Database\Query\Processors\Processor')
@@ -365,6 +369,15 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($builder, $result);
         $this->assertEquals($builder, $_SERVER['__test.builder']);
         unset($_SERVER['__test.builder']);
+    }
+
+    public function testGlobalMacrosAreCalledOnBuilder()
+    {
+        Builder::macro('foo', function ($bar) {
+            return $bar;
+        });
+
+        $this->assertEquals($this->getBuilder()->foo('bar'), 'bar');
     }
 
     public function testGetModelsProperlyHydratesModels()
@@ -385,13 +398,13 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
 
     public function testEagerLoadRelationsLoadTopLevelRelationships()
     {
-        $builder = m::mock('Illuminate\Database\Eloquent\Builder[loadRelation]', [$this->getMockQueryBuilder()]);
+        $builder = m::mock('Illuminate\Database\Eloquent\Builder[eagerLoadRelation]', [$this->getMockQueryBuilder()]);
         $nop1 = function () {
         };
         $nop2 = function () {
         };
         $builder->setEagerLoads(['foo' => $nop1, 'foo.bar' => $nop2]);
-        $builder->shouldAllowMockingProtectedMethods()->shouldReceive('loadRelation')->with(['models'], 'foo', $nop1)->andReturn(['foo']);
+        $builder->shouldAllowMockingProtectedMethods()->shouldReceive('eagerLoadRelation')->with(['models'], 'foo', $nop1)->andReturn(['foo']);
 
         $results = $builder->eagerLoadRelations(['models']);
         $this->assertEquals(['foo'], $results);
@@ -601,7 +614,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
 
         $builder = $model->withCount('foo');
 
-        $this->assertEquals('select *, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_count" from "eloquent_builder_test_model_parent_stubs"', $builder->toSql());
+        $this->assertEquals('select "eloquent_builder_test_model_parent_stubs".*, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_count" from "eloquent_builder_test_model_parent_stubs"', $builder->toSql());
     }
 
     public function testWithCountAndSelect()
@@ -634,7 +647,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
             $q->where('bam', '>', 'qux');
         }])->having('foo_count', '>=', 1);
 
-        $this->assertEquals('select *, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id" and "bam" > ?) as "foo_count" from "eloquent_builder_test_model_parent_stubs" where "bar" = ? having "foo_count" >= ?', $builder->toSql());
+        $this->assertEquals('select "eloquent_builder_test_model_parent_stubs".*, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id" and "bam" > ?) as "foo_count" from "eloquent_builder_test_model_parent_stubs" where "bar" = ? having "foo_count" >= ?', $builder->toSql());
         $this->assertEquals(['qux', 'baz', 1], $builder->getBindings());
     }
 
@@ -644,7 +657,16 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
 
         $builder = $model->withCount('foo as foo_bar');
 
-        $this->assertEquals('select *, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_bar_count" from "eloquent_builder_test_model_parent_stubs"', $builder->toSql());
+        $this->assertEquals('select "eloquent_builder_test_model_parent_stubs".*, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_bar_count" from "eloquent_builder_test_model_parent_stubs"', $builder->toSql());
+    }
+
+    public function testWithCountMultipleAndPartialRename()
+    {
+        $model = new EloquentBuilderTestModelParentStub;
+
+        $builder = $model->withCount(['foo as foo_bar', 'foo']);
+
+        $this->assertEquals('select "eloquent_builder_test_model_parent_stubs".*, (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_bar_count", (select count(*) from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id") as "foo_count" from "eloquent_builder_test_model_parent_stubs"', $builder->toSql());
     }
 
     public function testHasWithContraintsAndHavingInSubquery()
@@ -780,7 +802,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
 
         $sql = preg_replace($aliasRegex, $alias, $sql);
 
-        $this->assertContains('"self_related_stubs"."parent_id" = "self_alias_hash"."id"', $sql);
+        $this->assertContains('"self_alias_hash"."id" = "self_related_stubs"."parent_id"', $sql);
     }
 
     protected function mockConnectionForModel($model, $database)
@@ -819,7 +841,7 @@ class DatabaseEloquentBuilderTest extends PHPUnit_Framework_TestCase
     }
 }
 
-class EloquentBuilderTestScopeStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestScopeStub extends \Illuminate\Database\Eloquent\Model
 {
     public function scopeApproved($query)
     {
@@ -827,10 +849,10 @@ class EloquentBuilderTestScopeStub extends Illuminate\Database\Eloquent\Model
     }
 }
 
-class EloquentBuilderTestNestedStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestNestedStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'table';
-    use Illuminate\Database\Eloquent\SoftDeletes;
+    use \Illuminate\Database\Eloquent\SoftDeletes;
 
     public function scopeEmpty($query)
     {
@@ -853,7 +875,7 @@ class EloquentBuilderTestPluckStub
     }
 }
 
-class EloquentBuilderTestPluckDatesStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestPluckDatesStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $attributes;
 
@@ -868,72 +890,72 @@ class EloquentBuilderTestPluckDatesStub extends Illuminate\Database\Eloquent\Mod
     }
 }
 
-class EloquentBuilderTestModelParentStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestModelParentStub extends \Illuminate\Database\Eloquent\Model
 {
     public function foo()
     {
-        return $this->belongsTo('EloquentBuilderTestModelCloseRelatedStub');
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentBuilderTestModelCloseRelatedStub');
     }
 
     public function address()
     {
-        return $this->belongsTo('EloquentBuilderTestModelCloseRelatedStub', 'foo_id');
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentBuilderTestModelCloseRelatedStub', 'foo_id');
     }
 
     public function activeFoo()
     {
-        return $this->belongsTo('EloquentBuilderTestModelCloseRelatedStub', 'foo_id')->where('active', true);
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentBuilderTestModelCloseRelatedStub', 'foo_id')->where('active', true);
     }
 }
 
-class EloquentBuilderTestModelCloseRelatedStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestModelCloseRelatedStub extends \Illuminate\Database\Eloquent\Model
 {
     public function bar()
     {
-        return $this->hasMany('EloquentBuilderTestModelFarRelatedStub');
+        return $this->hasMany('Illuminate\Tests\Database\EloquentBuilderTestModelFarRelatedStub');
     }
 
     public function baz()
     {
-        return $this->hasMany('EloquentBuilderTestModelFarRelatedStub');
+        return $this->hasMany('Illuminate\Tests\Database\EloquentBuilderTestModelFarRelatedStub');
     }
 }
 
-class EloquentBuilderTestModelFarRelatedStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestModelFarRelatedStub extends \Illuminate\Database\Eloquent\Model
 {
 }
 
-class EloquentBuilderTestModelSelfRelatedStub extends Illuminate\Database\Eloquent\Model
+class EloquentBuilderTestModelSelfRelatedStub extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'self_related_stubs';
 
     public function parentFoo()
     {
-        return $this->belongsTo('EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id', 'parent');
+        return $this->belongsTo('Illuminate\Tests\Database\EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id', 'parent');
     }
 
     public function childFoo()
     {
-        return $this->hasOne('EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id');
+        return $this->hasOne('Illuminate\Tests\Database\EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id');
     }
 
     public function childFoos()
     {
-        return $this->hasMany('EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id', 'children');
+        return $this->hasMany('Illuminate\Tests\Database\EloquentBuilderTestModelSelfRelatedStub', 'parent_id', 'id', 'children');
     }
 
     public function parentBars()
     {
-        return $this->belongsToMany('EloquentBuilderTestModelSelfRelatedStub', 'self_pivot', 'child_id', 'parent_id', 'parent_bars');
+        return $this->belongsToMany('Illuminate\Tests\Database\EloquentBuilderTestModelSelfRelatedStub', 'self_pivot', 'child_id', 'parent_id', 'parent_bars');
     }
 
     public function childBars()
     {
-        return $this->belongsToMany('EloquentBuilderTestModelSelfRelatedStub', 'self_pivot', 'parent_id', 'child_id', 'child_bars');
+        return $this->belongsToMany('Illuminate\Tests\Database\EloquentBuilderTestModelSelfRelatedStub', 'self_pivot', 'parent_id', 'child_id', 'child_bars');
     }
 
     public function bazes()
     {
-        return $this->hasMany('EloquentBuilderTestModelFarRelatedStub', 'foreign_key', 'id', 'bar');
+        return $this->hasMany('Illuminate\Tests\Database\EloquentBuilderTestModelFarRelatedStub', 'foreign_key', 'id', 'bar');
     }
 }
