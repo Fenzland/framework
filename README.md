@@ -7,6 +7,11 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
 </p>
 
+## About Forking
+
+This repository is forked from [laravel/freamwork](https://github.com/laravel/framework). There are some features added in, some bad designing fixed. With fenzland/laravel, you can do what you cannot do with official Laravel. With updating of [Laravel](https://github.com/laravel/framework), we well continually update fenzland/laravel, so that you can enjoy new features and bug fixings of [Laravel](https://github.com/laravel/framework). This project is intended to make Laravel better, so if Laravel is better enough, we do nothing. Therefore, when some official changings bring what we need, we will remove our changings on next non-backward compatible version.
+Packages work with laravel/framework whitch required illuminate/* instead of laravel/freamwork can work with fenzland/laravel too.
+
 ## About Laravel
 
 > **Note:** This repository contains the core code of the Laravel framework. If you want to build an application using Laravel 5, visit the main [Laravel repository](https://github.com/laravel/laravel).
