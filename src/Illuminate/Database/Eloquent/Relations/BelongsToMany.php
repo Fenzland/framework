@@ -98,12 +98,14 @@ class BelongsToMany extends Relation
      * @param  string  $table
      * @param  string  $foreignKey
      * @param  string  $relatedKey
+     * @param  string  $localKey
      * @param  string  $relationName
      * @return void
      */
-    public function __construct(Builder $query, Model $parent, $table, $foreignKey, $relatedKey, $relationName = null)
+    public function __construct(Builder $query, Model $parent, $table, $foreignKey, $relatedKey, $localKey, $relationName = null)
     {
         $this->table = $table;
+        $this->localKey = $localKey;
         $this->relatedKey = $relatedKey;
         $this->foreignKey = $foreignKey;
         $this->relationName = $relationName;
@@ -140,7 +142,7 @@ class BelongsToMany extends Relation
         // model instance. Then we can set the "where" for the parent models.
         $baseTable = $this->related->getTable();
 
-        $key = $baseTable.'.'.$this->related->getKeyName();
+        $key = $baseTable.'.'.$this->localKey;
 
         $query->join($this->table, $key, '=', $this->getQualifiedRelatedKeyName());
 
@@ -592,7 +594,7 @@ class BelongsToMany extends Relation
     {
         // To hydrate the pivot relationship, we will just gather the pivot attributes
         // and create a new Pivot model, which is basically a dynamic model that we
-        // will set the attributes, table, and connections on so it they be used.
+        // will set the attributes, table, and connections on it so it will work.
         foreach ($models as $model) {
             $model->setRelation('pivot', $this->newExistingPivot(
                 $this->migratePivotAttributes($model)

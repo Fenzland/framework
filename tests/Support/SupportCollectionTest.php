@@ -9,7 +9,6 @@ use ReflectionClass;
 use JsonSerializable;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Support\Collection;
-use PHPUnit_Framework_Error_Notice;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -229,7 +228,7 @@ class SupportCollectionTest extends TestCase
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error_Notice
+     * @expectedException \PHPUnit\Framework\Error\Notice
      */
     public function testArrayAccessOffsetGetOnNonExist()
     {
@@ -249,7 +248,7 @@ class SupportCollectionTest extends TestCase
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error_Notice
+     * @expectedException \PHPUnit\Framework\Error\Notice
      */
     public function testArrayAccessOffsetUnset()
     {
@@ -1894,6 +1893,38 @@ class SupportCollectionTest extends TestCase
 
         $this->assertSame([1], $fromTap);
         $this->assertSame([1, 2, 3], $collection->toArray());
+    }
+
+    public function testWhen()
+    {
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->when(true, function ($collection) {
+            return $collection->push('adam');
+        });
+
+        $this->assertSame(['michael', 'tom', 'adam'], $collection->toArray());
+
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->when(false, function ($collection) {
+            return $collection->push('adam');
+        });
+
+        $this->assertSame(['michael', 'tom'], $collection->toArray());
+    }
+
+    public function testWhenDefault()
+    {
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->when(false, function ($collection) {
+            return $collection->push('adam');
+        }, function ($collection) {
+            return $collection->push('taylor');
+        });
+
+        $this->assertSame(['michael', 'tom', 'taylor'], $collection->toArray());
     }
 }
 

@@ -40,17 +40,18 @@ class MorphToMany extends BelongsToMany
      * @param  string  $table
      * @param  string  $foreignKey
      * @param  string  $relatedKey
+     * @param  string  $localKey
      * @param  string  $relationName
      * @param  bool  $inverse
      * @return void
      */
-    public function __construct(Builder $query, Model $parent, $name, $table, $foreignKey, $relatedKey, $relationName = null, $inverse = false)
+    public function __construct(Builder $query, Model $parent, $name, $table, $foreignKey, $relatedKey, $localKey, $relationName = null, $inverse = false)
     {
         $this->inverse = $inverse;
         $this->morphType = $name.'_type';
         $this->morphClass = $inverse ? $query->getModel()->getMorphClass() : $parent->getMorphClass();
 
-        parent::__construct($query, $parent, $table, $foreignKey, $relatedKey, $relationName);
+        parent::__construct($query, $parent, $table, $foreignKey, $relatedKey, $localKey, $relationName);
     }
 
     /**
@@ -128,7 +129,10 @@ class MorphToMany extends BelongsToMany
      */
     public function newPivot(array $attributes = [], $exists = false)
     {
-        $pivot = new MorphPivot($this->parent, $attributes, $this->table, $exists);
+        $using = $this->using;
+
+        $pivot = $using ? new $using($this->parent, $attributes, $this->table, $exists)
+                        : new MorphPivot($this->parent, $attributes, $this->table, $exists);
 
         $pivot->setPivotKeys($this->foreignKey, $this->relatedKey)
               ->setMorphType($this->morphType)
