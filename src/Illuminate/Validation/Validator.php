@@ -1027,7 +1027,7 @@ class Validator implements ValidatorContract
         $callback = $this->extensions[$rule];
 
         if ($callback instanceof Closure) {
-            return call_user_func_array($callback, $parameters);
+            return $callback->call($this, ...$parameters);
         } elseif (is_string($callback)) {
             return $this->callClassBasedExtension($callback, $parameters);
         }
