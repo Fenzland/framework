@@ -37,22 +37,31 @@ trait RouteDependencyResolverTrait
      */
     public function resolveMethodDependencies(array $parameters, ReflectionFunctionAbstract $reflector)
     {
-        $originalParameters = $parameters;
-        $nameOrderParameters= [];
+        $results = [];
+
+        $instanceCount = 0;
+
+        $values = array_values($parameters);
 
         foreach ($reflector->getParameters() as $key => $parameter) {
             $instance = $this->transformDependency(
-                $parameter, $parameters, $originalParameters
+                $parameter, $parameters
             );
 
-            if (! is_null($instance)) {
-                $this->spliceIntoParameters($parameters, $key, $instance);
-            }
+            $results[] = $instance?:$parameter[$parameter->name]??$parameter->getDefaultValue();
+            continue;
 
-            $nameOrderParameters[]= $instance?:$originalParameters[$parameter->name]??null;
+            if (! is_null($instance)) {
+                $instanceCount++;
+
+                $results[] = $instance;
+            } else {
+                $results[] = isset($values[$key - $instanceCount])
+                    ? $values[$key - $instanceCount] : $parameter->getDefaultValue();
+            }
         }
 
-        return $nameOrderParameters;
+        return $results;
     }
 
     /**
@@ -60,10 +69,9 @@ trait RouteDependencyResolverTrait
      *
      * @param  \ReflectionParameter  $parameter
      * @param  array  $parameters
-     * @param  array  $originalParameters
      * @return mixed
      */
-    protected function transformDependency(ReflectionParameter $parameter, $parameters, $originalParameters)
+    protected function transformDependency(ReflectionParameter $parameter, $parameters)
     {
         $class = $parameter->getClass();
 
@@ -89,20 +97,5 @@ trait RouteDependencyResolverTrait
         return ! is_null(Arr::first($parameters, function ($value) use ($class) {
             return $value instanceof $class;
         }));
-    }
-
-    /**
-     * Splice the given value into the parameter list.
-     *
-     * @param  array  $parameters
-     * @param  string  $key
-     * @param  mixed  $instance
-     * @return void
-     */
-    protected function spliceIntoParameters(array &$parameters, $key, $instance)
-    {
-        array_splice(
-            $parameters, $key, 0, [$instance]
-        );
     }
 }
