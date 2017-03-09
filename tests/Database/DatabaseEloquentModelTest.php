@@ -6,6 +6,7 @@ use DateTime;
 use stdClass;
 use Exception;
 use Mockery as m;
+use Carbon\Carbon;
 use LogicException;
 use ReflectionClass;
 use DateTimeImmutable;
@@ -17,9 +18,19 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 class DatabaseEloquentModelTest extends TestCase
 {
+    public function setup()
+    {
+        parent::setup();
+
+        Carbon::setTestNow(Carbon::now());
+    }
+
     public function tearDown()
     {
+        parent::tearDown();
+
         m::close();
+        Carbon::setTestNow(null);
 
         \Illuminate\Database\Eloquent\Model::unsetEventDispatcher();
         \Carbon\Carbon::resetToStringFormat();
@@ -292,7 +303,7 @@ class DatabaseEloquentModelTest extends TestCase
         $model->expects($this->any())->method('getDateFormat')->will($this->returnValue('Y-m-d H:i:s'));
         $model->setRawAttributes([
             'created_at' => '2012-12-04',
-            'updated_at' => time(),
+            'updated_at' => Carbon::now()->getTimestamp(),
         ]);
 
         $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
@@ -339,7 +350,7 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
 
         $model = new EloquentDateModelStub;
-        $model->created_at = time();
+        $model->created_at = Carbon::now()->getTimestamp();
         $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
 
         $model = new EloquentDateModelStub;
@@ -1464,6 +1475,21 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertNull($array['dateAttribute']);
         $this->assertNull($array['datetimeAttribute']);
         $this->assertNull($array['timestampAttribute']);
+    }
+
+    /**
+     * @expectedException \Illuminate\Database\Eloquent\JsonEncodingException
+     */
+    public function testModelAttributeCastingFailsOnUnencodableData()
+    {
+        $model = new EloquentModelCastingStub;
+        $model->objectAttribute = ['foo' => "b\xF8r"];
+        $obj = new StdClass;
+        $obj->foo = "b\xF8r";
+        $model->arrayAttribute = $obj;
+        $model->jsonAttribute = ['foo' => "b\xF8r"];
+
+        $model->getAttributes();
     }
 
     public function testUpdatingNonExistentModelFails()
