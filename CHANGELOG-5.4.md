@@ -1,11 +1,55 @@
 # Release Notes for 5.4.x
 
-## [Unreleased]
+## v5.4.15 (2017-03-02)
+
+### Added
+- Added `any()` method to `ViewErrorBag` ([#18176](https://github.com/laravel/framework/pull/18176))
+- Added `Storage` and `File` fakes ([#18178](https://github.com/laravel/framework/pull/18178), [#18180](https://github.com/laravel/framework/pull/18180))
+
+### Changed
+- Made queue worker properties `$shouldQuit` and `$paused` public ([e40c0e7](https://github.com/laravel/framework/commit/e40c0e7cd885156caa402d6d016cc686479736f4))
+
+### Fixed
+- Proxy `isset()` checks on `TestResponse` ([#18182](https://github.com/laravel/framework/pull/18182))
+
+
+## v5.4.14 (2017-03-01)
+
+### Added
+- Added `Str::kebab()` and `kebab_case()` helper ([#18084](https://github.com/laravel/framework/pull/18084))
+- Added `Route::getActionMethod()` ([#18105](https://github.com/laravel/framework/pull/18105))
+- Support granular `$tries` and `$timeout` on `Mailable` ([#18103](https://github.com/laravel/framework/pull/18103))
+- Added context to the `assertJson()` response ([#18166](https://github.com/laravel/framework/pull/18166), [da2c892](https://github.com/laravel/framework/commit/da2c8923328a3f852331fca5778214e05d8e6fde))
+- Add `whereNotIn()` and `whereNotInStrict()` to `Collection` ([#18157](https://github.com/laravel/framework/pull/18157))
+
+### Changed
+- Create `TestResponse` using composition instead of inheritance ([#18089](https://github.com/laravel/framework/pull/18089))
+- Changed visibility of `Pivot::$parent` from `protected` to `public` ([#18096](https://github.com/laravel/framework/pull/18096))
+- Catch Sqlite3 deadlocks in `DetectsDeadlocks` ([#18107](https://github.com/laravel/framework/pull/18107))
+- Use `fromRawAttributes()` when in `Model::newPivot()` ([#18127](https://github.com/laravel/framework/pull/18127), [063e5ae](https://github.com/laravel/framework/commit/063e5ae341c32220d4679d0215ab9b263d0c8a33))
+- Use default connection in `DatabaseManager::purge()` when no connection name is provided ([#18128](https://github.com/laravel/framework/pull/18128))
+- Convert rule objects only once to string ([#18141](https://github.com/laravel/framework/pull/18141))
+- Respect `ShouldQueue` contract in `Mailer::send()` ([#18144](https://github.com/laravel/framework/pull/18144), [717f1f6](https://github.com/laravel/framework/commit/717f1f67eb7bb2fac7c57311f0afaa637375407d), [#18160](https://github.com/laravel/framework/pull/18160))
+
+### Fixed
+- Don't use `value()` helper in `BoundMethod` class ([#18075](https://github.com/laravel/framework/pull/18075))
+- Don't require manifest file when running `npm run hot` ([#18088](https://github.com/laravel/framework/pull/18088))
+- Fixed injection placement of dependencies for routing method parameters ([#17973](https://github.com/laravel/framework/pull/17973))
+- Return `false` from `Model::fireModelEvent()` if custom model event returns `false` ([c5a6290](https://github.com/laravel/framework/commit/c5a62901589e313474376e241549ac31d9d3c695))
+- Fixed `firstOrFail()` on relation setting the wrong model on `ModelNotFoundException` ([#18138](https://github.com/laravel/framework/pull/18138))
+- Fixed `RateLimiter` setting initial attempts count to `2` ([#18139](https://github.com/laravel/framework/pull/18139))
+- Fixed compiled `DELETE` query when using `JOIN` with aliases ([#18156](https://github.com/laravel/framework/pull/18156), [e09b9eb](https://github.com/laravel/framework/commit/e09b9eb62715706a0368acf0af7911340e0a3298))
+- Fixed validating `present` in combination with `nullable` ([#18173](https://github.com/laravel/framework/pull/18173))
+
+
+## v5.4.13 (2017-02-22)
 
 ### Added
 - Add `$default` parameter to `Collection::when()` method ([#17941](https://github.com/laravel/framework/pull/17941))
 - Support `--resource` argument on `make:model` command ([#17955](https://github.com/laravel/framework/pull/17955))
 - Added `replaceDimensions()` for validator messages ([#17946](https://github.com/laravel/framework/pull/17946), [b219058](https://github.com/laravel/framework/commit/b219058063336dd9cc851349e287052d76bcc18e))
+- Allow Slack notifications to use image urls ([#18011](https://github.com/laravel/framework/pull/18011))
+- Added `@includeWhen($condition, $view, $data)` directive ([#18047](https://github.com/laravel/framework/pull/18047))
 
 ### Changed
 - Prevent Blade from compiling statements inside comments ([#17952](https://github.com/laravel/framework/pull/17952))
@@ -13,12 +57,18 @@
 - Use the pagination translation strings in paginator templates ([#18009](https://github.com/laravel/framework/pull/18009))
 - Use `getAuthPassword()` method in `AuthenticateSession` middleware ([#17965](https://github.com/laravel/framework/pull/17965))
 - Return `null` from `Gate::getPolicyFor()` if given class is not a string ([#17972](https://github.com/laravel/framework/pull/17972))
+- Add missing methods to the `Job` interface ([#18034](https://github.com/laravel/framework/pull/18034))
+- Improved PostgreSQL table existence check ([#18041](https://github.com/laravel/framework/pull/18041))
+- Allow `getActualClassNameForMorph()` used by `morphInstanceTo()` to be overridden ([#18058](https://github.com/laravel/framework/pull/18058))
 
 ### Fixed
 - Fixed `@lang` directive when used with JSON file ([#17919](https://github.com/laravel/framework/pull/17919), [2bd35c1](https://github.com/laravel/framework/commit/2bd35c13678faae68ee0bbe95d46b12f77357c98))
 - Improved image `dimensions` validation rule ([#17943](https://github.com/laravel/framework/pull/17943), [#17944](https://github.com/laravel/framework/pull/17944), [#17963](https://github.com/laravel/framework/pull/17963), [#17980](https://github.com/laravel/framework/pull/17980))
 - Fixed `$willBeAvailableAt` having the wrong time if using `$retryAfter` in `MaintenanceModeException` ([#17991](https://github.com/laravel/framework/pull/17991))
 - Trim spaces while collecting section name ([#18012](https://github.com/laravel/framework/pull/18012))
+- Fixed implementation of `SqsQueue::size()` ([#18037](https://github.com/laravel/framework/pull/18037))
+- Fixed bug in `PasswordBroker::deleteToken()` ([#18045](https://github.com/laravel/framework/pull/18045))
+- Fixed route parameters binding ([#17973](https://github.com/laravel/framework/pull/17973))
 
 
 ## v5.4.12 (2017-02-15)

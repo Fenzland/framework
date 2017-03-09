@@ -13,7 +13,7 @@ trait HasEvents
      *
      * @var array
      */
-    protected $events = [];
+    protected $dispatchesEvents = [];
 
     /**
      * User exposed observable events.
@@ -138,7 +138,11 @@ trait HasEvents
 
         $result = $this->fireCustomModelEvent($event, $method);
 
-        return ! is_null($result) ? $result : static::$dispatcher->{$method}(
+        if ($result === false) {
+            return false;
+        }
+
+        return ! empty($result) ? $result : static::$dispatcher->{$method}(
             "eloquent.{$event}: ".static::class, $this
         );
     }
@@ -152,11 +156,11 @@ trait HasEvents
      */
     protected function fireCustomModelEvent($event, $method)
     {
-        if (! isset($this->events[$event])) {
+        if (! isset($this->dispatchesEvents[$event])) {
             return;
         }
 
-        $result = static::$dispatcher->$method(new $this->events[$event]($this));
+        $result = static::$dispatcher->$method(new $this->dispatchesEvents[$event]($this));
 
         if (! is_null($result)) {
             return $result;
