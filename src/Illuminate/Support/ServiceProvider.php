@@ -9,7 +9,7 @@ abstract class ServiceProvider
     /**
      * The application instance.
      *
-     * @var \Illuminate\Contracts\Foundation\Application
+     * @var \Illuminate\Foundation\Application
      */
     protected $app;
 
@@ -25,19 +25,19 @@ abstract class ServiceProvider
      *
      * @var array
      */
-    protected static $publishes = [];
+    public static $publishes = [];
 
     /**
      * The paths that should be published by group.
      *
      * @var array
      */
-    protected static $publishGroups = [];
+    public static $publishGroups = [];
 
     /**
      * Create a new service provider instance.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @param  \Illuminate\Foundation\Application  $app
      * @return void
      */
     public function __construct($app)
@@ -216,6 +216,26 @@ abstract class ServiceProvider
         }
 
         return [];
+    }
+
+    /**
+     * Get the service providers available for publishing.
+     *
+     * @return array
+     */
+    public static function publishableProviders()
+    {
+        return array_keys(static::$publishes);
+    }
+
+    /**
+     * Get the groups available for publishing.
+     *
+     * @return array
+     */
+    public static function publishableGroups()
+    {
+        return array_keys(static::$publishGroups);
     }
 
     /**
