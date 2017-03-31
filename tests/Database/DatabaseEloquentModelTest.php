@@ -98,6 +98,20 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertEquals($hash, $model->password_hash);
     }
 
+    public function testArrayAccessToAttributes()
+    {
+        $model = new EloquentModelStub(['attributes' => 1, 'connection' => 2, 'table' => 3]);
+        unset($model['table']);
+
+        $this->assertTrue(isset($model['attributes']));
+        $this->assertEquals($model['attributes'], 1);
+        $this->assertTrue(isset($model['connection']));
+        $this->assertEquals($model['connection'], 2);
+        $this->assertFalse(isset($model['table']));
+        $this->assertEquals($model['table'], null);
+        $this->assertFalse(isset($model['with']));
+    }
+
     public function testNewInstanceReturnsNewInstanceWithAttributesSet()
     {
         $model = new EloquentModelStub;
@@ -1567,6 +1581,14 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertInstanceOf(Builder::class, $model->scopes($scopes));
 
         $this->assertSame($scopes, $model->scopesCalled);
+    }
+
+    public function testIsWithNull()
+    {
+        $firstInstance = new EloquentModelStub(['id' => 1]);
+        $secondInstance = null;
+
+        $this->assertFalse($firstInstance->is($secondInstance));
     }
 
     public function testIsWithTheSameModelInstance()
