@@ -674,7 +674,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         $results = ($total = $this->toBase()->getCountForPagination())
                                     ? $this->forPage($page, $perPage)->get($columns)
@@ -699,7 +699,7 @@ class Builder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ?: Paginator::resolvePerPage($this->model->getPerPage());
 
         // Next we will set the limit and offset for this query so that when we get the
         // results we get the proper section of results. Then, we'll create the full
@@ -1234,6 +1234,12 @@ class Builder
 
         if (in_array($method, $this->passthru)) {
             return $this->toBase()->{$method}(...$parameters);
+        }
+
+        if (method_exists($this->model, $query = 'query'.ucfirst($method))) {
+            array_unshift($parameters, $this);
+
+            return call_user_func_array([$this->model, $query], $parameters);
         }
 
         $this->query->{$method}(...$parameters);
