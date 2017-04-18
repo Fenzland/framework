@@ -3,6 +3,54 @@
 ## [Unreleased]
 
 ### Added
+- Added `assertSuccessful()` and `assertRedirect()` to `TestResponse` ([#18629](https://github.com/laravel/framework/pull/18629))
+- Added `assertSeeText()` and `assertDontSeeText()` to `TestResponse` ([#18690](https://github.com/laravel/framework/pull/18690))
+- Added `assertJsonMissing()` to `TestResponse` ([#18721](https://github.com/laravel/framework/pull/18721), [786b782](https://github.com/laravel/framework/commit/786b7821e0009a4288bff032443f2b1a273ee459))
+- Added support for attaching an image to Slack attachments `$attachment->image($url)`([#18664](https://github.com/laravel/framework/pull/18664))
+- Added `Validator::extendDependent()` to allow adding custom rules that depend on other fields ([#18654](https://github.com/laravel/framework/pull/18654))
+- Added support for `--parent` option on `make:controller` ([#18606](https://github.com/laravel/framework/pull/18606))
+
+### Changed
+- Don't trim leading slashes on local filesystem base URLs ([acd66fe](https://github.com/laravel/framework/commit/acd66fef646fd5f7ca54380d55bc8e2e2cbe64b6))
+- Accept variable on `@empty()` directive ([#18738](https://github.com/laravel/framework/pull/18738))
+
+### Fixed
+- Fixed an issue with `Collection::groupBy()` when the provided value is a boolean ([#18674](https://github.com/laravel/framework/pull/18674))
+- Bring back an old behaviour in resolving controller method dependencies ([#18646](https://github.com/laravel/framework/pull/18646))
+- Fixed job release when exception occurs ([#18737](https://github.com/laravel/framework/pull/18737))
+
+## v5.4.17 (2017-04-03)
+
+### Added
+- Added `getManager()` and `setManager()` to queue worker ([#18452](https://github.com/laravel/framework/pull/18452))
+- Added support for Pheanstalk's `$timeout` and `$persistent` options ([#18448](https://github.com/laravel/framework/pull/18448))
+- Added `Collection::times()` method ([#18457](https://github.com/laravel/framework/pull/18457))
+- Added PostgreSQL's `REAL` data type ([#18513](https://github.com/laravel/framework/pull/18513))
+- Added `flatMap` to collection higher order proxies ([#18529](https://github.com/laravel/framework/pull/18529))
+- Support multiple `--path` parameters with `migrate:reset` ([#18540](https://github.com/laravel/framework/pull/18540))
+- Store SparkPost `Transmission-ID` in the header after sending message ([#18594](https://github.com/laravel/framework/pull/18594))
+
+### Changed
+- Check for `Htmlable` instead of `HtmlString` in `Mailer::renderView()` ([#18459](https://github.com/laravel/framework/pull/18459), [da7b006](https://github.com/laravel/framework/commit/da7b006d8b236d8b29adb5f5f2696f1c2ec3e999))
+- Added mutex for schedule events ([#18295](https://github.com/laravel/framework/pull/18295), [ae2eb1f](https://github.com/laravel/framework/commit/ae2eb1f498aa6c2e6c45040d26fb9502eabab535))
+- Don't use helper functions in service providers ([#18506](https://github.com/laravel/framework/pull/18506), [#18521](https://github.com/laravel/framework/pull/18521))
+- Change `user_id` to unsigned integer in database session stub ([#18557](https://github.com/laravel/framework/pull/18557))
+- Improved performance of `UrlGenerator::isValidUrl()` ([#18566](https://github.com/laravel/framework/pull/18566))
+
+### Fixed
+- Handle missing or malformed `config/app.php` file ([#18466](https://github.com/laravel/framework/pull/18466), [92931cf](https://github.com/laravel/framework/commit/92931cffe48503dfe7095c23856da07de304fef2))
+- Only call `up` and `down` on migration if the method exists ([d27d94e](https://github.com/laravel/framework/commit/d27d94ed5220da3f6462c57eef122d8f40419ab1))
+- Fixed overwriting of routes with identical path and method ([#18475](https://github.com/laravel/framework/pull/18475), [5aee967](https://github.com/laravel/framework/commit/5aee9675038f0ec30ba4ed2c1eb9b544ac370c06))
+- Fixing model/route binding with identical name ([#18476](https://github.com/laravel/framework/pull/18476))
+- Allow `rollbackMigrations()` path to be with string ([#18535](https://github.com/laravel/framework/pull/18535))
+- Use `getStatusCode()` in `TestResponse::assertRedirect()` ([#18559](https://github.com/laravel/framework/pull/18559))
+- Case `parseIds()` to array in `InteractsWithPivotTable::sync()` ([#18547](https://github.com/laravel/framework/pull/18547))
+- Preserve route parameter names ([#18604](https://github.com/laravel/framework/pull/18604))
+
+
+## v5.4.16 (2017-03-21)
+
+### Added
 - Added PHPDBG detection to `runningInConsole()` ([#18198](https://github.com/laravel/framework/pull/18198))
 - Added `Arr:wrap()` method ([#18216](https://github.com/laravel/framework/pull/18216))
 - Allow scheduling of queued jobs ([#18235](https://github.com/laravel/framework/pull/18235), [7bb67e2](https://github.com/laravel/framework/commit/7bb67e225646fb578c039cc0af130f7aa6858120))
@@ -357,7 +405,7 @@
 - Added higher-order messages for the collections ([#16267](https://github.com/laravel/framework/pull/16267), [e276b3d](https://github.com/laravel/framework/commit/e276b3d4bf2a124c4eb5975a8a2724b8c806139a), [2b7ab30](https://github.com/laravel/framework/commit/2b7ab30e0ec56ac4e4093d7f2775da98086c8000), [#16274](https://github.com/laravel/framework/pull/16274), [724950a](https://github.com/laravel/framework/commit/724950a42c225c7b53c56283c01576b050fea37a), [#17000](https://github.com/laravel/framework/pull/17000))
 - Allow collection macros to be proxied ([#16749](https://github.com/laravel/framework/pull/16749))
 - Added operator support to `Collection::contains()` method ([#16791](https://github.com/laravel/framework/pull/16791))
-- Added `Collection::every()` method ([#16777](https://github.com/laravel/framework/pull/16777))
+- Renamed `every()` method to `nth()` and added new `every()` to determine if all items pass the given test ([#16777](https://github.com/laravel/framework/pull/16777))
 - Allow passing an array to `Collection::find()` ([#16849](https://github.com/laravel/framework/pull/16849))
 - Always return a collection when calling `Collection::random()` with a parameter ([#16865](https://github.com/laravel/framework/pull/16865))
 - Don't renumber the keys and keep the input array order in `mapWithKeys()` ([#16564](https://github.com/laravel/framework/pull/16564))
