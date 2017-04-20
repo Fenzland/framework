@@ -1328,10 +1328,13 @@ class DatabaseEloquentModelTest extends TestCase
         $query->shouldReceive('where')->andReturn($query);
         $query->shouldReceive('increment');
 
-        $model->publicIncrement('foo');
-
-        $this->assertEquals(3, $model->foo);
+        $model->publicIncrement('foo', 1);
         $this->assertFalse($model->isDirty());
+
+        $model->publicIncrement('foo', 1, ['category' => 1]);
+        $this->assertEquals(4, $model->foo);
+        $this->assertEquals(1, $model->category);
+        $this->assertTrue($model->isDirty('category'));
     }
 
     public function testRelationshipTouchOwnersIsPropagated()
@@ -1673,9 +1676,9 @@ class EloquentModelStub extends Model
         $this->attributes['password_hash'] = sha1($value);
     }
 
-    public function publicIncrement($column, $amount = 1)
+    public function publicIncrement($column, $amount = 1, $extra = [])
     {
-        return $this->increment($column, $amount);
+        return $this->increment($column, $amount, $extra);
     }
 
     public function belongsToStub()

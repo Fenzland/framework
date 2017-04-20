@@ -94,10 +94,10 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * @param  array  $attributes
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function firstOrNew(array $attributes)
+    public function firstOrNew(array $attributes, array $values = [])
     {
         if (is_null($instance = $this->where($attributes)->first())) {
-            $instance = $this->related->newInstance($attributes);
+            $instance = $this->related->newInstance($attributes + $values);
 
             // When saving a polymorphic relationship, we need to set not only the foreign
             // key, but also the foreign key type, which is typically the class name of
@@ -114,10 +114,10 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * @param  array  $attributes
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function firstOrCreate(array $attributes)
+    public function firstOrCreate(array $attributes, array $values = [])
     {
         if (is_null($instance = $this->where($attributes)->first())) {
-            $instance = $this->create($attributes);
+            $instance = $this->create($attributes + $values);
         }
 
         return $instance;

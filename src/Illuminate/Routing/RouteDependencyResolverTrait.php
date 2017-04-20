@@ -54,10 +54,10 @@ trait RouteDependencyResolverTrait
             if (! is_null($instance)) {
                 $instanceCount++;
 
-                $results[] = $instance;
-            } else {
-                $results[] = isset($values[$key - $instanceCount])
-                    ? $values[$key - $instanceCount] : $parameter->getDefaultValue();
+                $this->spliceIntoParameters($parameters, $key, $instance);
+            } elseif (! isset($values[$key - $instanceCount]) &&
+                      $parameter->isDefaultValueAvailable()) {
+                $this->spliceIntoParameters($parameters, $key, $parameter->getDefaultValue());
             }
         }
 
@@ -97,5 +97,20 @@ trait RouteDependencyResolverTrait
         return ! is_null(Arr::first($parameters, function ($value) use ($class) {
             return $value instanceof $class;
         }));
+    }
+
+    /**
+     * Splice the given value into the parameter list.
+     *
+     * @param  array  $parameters
+     * @param  string  $offset
+     * @param  mixed  $value
+     * @return void
+     */
+    protected function spliceIntoParameters(array &$parameters, $offset, $value)
+    {
+        array_splice(
+            $parameters, $offset, 0, [$value]
+        );
     }
 }

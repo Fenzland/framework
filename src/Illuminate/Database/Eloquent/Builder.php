@@ -69,7 +69,7 @@ class Builder
      */
     protected $passthru = [
         'insert', 'insertGetId', 'getBindings', 'toSql',
-        'exists', 'count', 'min', 'max', 'avg', 'sum', 'getConnection',
+        'exists', 'count', 'min', 'max', 'avg', 'sum', 'getConnection', 'implode',
     ];
 
     /**
@@ -253,7 +253,7 @@ class Builder
      *
      * @param  mixed  $id
      * @param  array  $columns
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Collection|static[]|static|null
      */
     public function find($id, $columns = ['*'])
     {
