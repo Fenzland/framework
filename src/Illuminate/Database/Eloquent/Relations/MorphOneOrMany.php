@@ -92,6 +92,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * Get the first related model record matching the attributes or instantiate it.
      *
      * @param  array  $attributes
+     * @param  array  $values
      * @return \Illuminate\Database\Eloquent\Model
      */
     public function firstOrNew(array $attributes, array $values = [])
@@ -112,6 +113,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * Get the first related record matching the attributes or create it.
      *
      * @param  array  $attributes
+     * @param  array  $values
      * @return \Illuminate\Database\Eloquent\Model
      */
     public function firstOrCreate(array $attributes, array $values = [])

@@ -245,7 +245,7 @@ class Router implements RegistrarContract, BindingRegistrar
      * @param  string  $name
      * @param  string  $controller
      * @param  array  $options
-     * @return void
+     * @return \Illuminate\Routing\PendingResourceRegistration
      */
     public function resource($name, $controller, array $options = [])
     {
@@ -255,7 +255,9 @@ class Router implements RegistrarContract, BindingRegistrar
             $registrar = new ResourceRegistrar($this);
         }
 
-        $registrar->register($name, $controller, $options);
+        return new PendingResourceRegistration(
+            $registrar, $name, $controller, $options
+        );
     }
 
     /**
@@ -599,7 +601,7 @@ class Router implements RegistrarContract, BindingRegistrar
      * @param  mixed  $response
      * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
      */
-    public function prepareResponse($request, $response)
+    public static function prepareResponse($request, $response)
     {
         if ($response instanceof PsrResponseInterface) {
             $response = (new HttpFoundationFactory)->createResponse($response);
@@ -915,7 +917,15 @@ class Router implements RegistrarContract, BindingRegistrar
      */
     public function has($name)
     {
-        return $this->routes->hasNamedRoute($name);
+        $names = is_array($name) ? $name : func_get_args();
+
+        foreach ($names as $value) {
+            if (! $this->routes->hasNamedRoute($value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

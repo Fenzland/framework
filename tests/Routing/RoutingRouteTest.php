@@ -309,24 +309,6 @@ class RoutingRouteTest extends TestCase
         unset($_SERVER['__test.route_inject']);
     }
 
-    public function testClassesAndVariablesCanBeInjectedIntoRoutes()
-    {
-        unset($_SERVER['__test.route_inject']);
-        $router = $this->getRouter();
-        $router->get('foo/{var}/{bar?}/{baz?}', function (stdClass $foo, $var, $bar = 'test', stdClass $baz = null) {
-            $_SERVER['__test.route_inject'] = func_get_args();
-
-            return 'hello';
-        });
-        $this->assertEquals('hello', $router->dispatch(Request::create('foo/bar', 'GET'))->getContent());
-        $this->assertInstanceOf('stdClass', $_SERVER['__test.route_inject'][0]);
-        $this->assertEquals('bar', $_SERVER['__test.route_inject'][1]);
-        $this->assertEquals('test', $_SERVER['__test.route_inject'][2]);
-        $this->assertNull($_SERVER['__test.route_inject'][3]);
-        $this->assertArrayHasKey(3, $_SERVER['__test.route_inject']);
-        unset($_SERVER['__test.route_inject']);
-    }
-
     public function testOptionsResponsesAreGeneratedByDefault()
     {
         $router = $this->getRouter();
@@ -467,7 +449,29 @@ class RoutingRouteTest extends TestCase
         $this->assertInstanceOf('Illuminate\Http\Request', $values[0]);
         $this->assertEquals(1, $values[1]->value);
         $this->assertNull($values[2]);
-        $this->assertInstanceOf('Illuminate\Tests\Routing\RoutingTestTeamModel', $values[3]);
+        $this->assertNull($values[3]);
+    }
+
+    public function testLeadingParamDoesntReceiveForwardSlashOnEmptyPath()
+    {
+        $router = $this->getRouter();
+        $outer_one = 'abc1234'; // a string that is not one we're testing
+        $router->get('{one?}', [
+            'uses' => function ($one = null) use (&$outer_one) {
+                $outer_one = $one;
+
+                return $one;
+            },
+            'where' => ['one' => '(.+)'],
+        ]);
+
+        $this->assertEquals('', $router->dispatch(Request::create(''))->getContent());
+        $this->assertNull($outer_one);
+        // Expects: '' ($one === null)
+        // Actual: '/' ($one === '/')
+
+        $this->assertEquals('foo', $router->dispatch(Request::create('/foo', 'GET'))->getContent());
+        $this->assertEquals('foo/bar/baz', $router->dispatch(Request::create('/foo/bar/baz', 'GET'))->getContent());
     }
 
     /**
