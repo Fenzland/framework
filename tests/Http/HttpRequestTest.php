@@ -157,6 +157,21 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->is('/'));
     }
 
+    public function testIsRouteNameMethod()
+    {
+        $request = Request::create('/foo/bar', 'GET');
+
+        $request->setRouteResolver(function () use ($request) {
+            $route = new Route('GET', '/foo/bar', ['as' => 'foo.bar']);
+            $route->bind($request);
+
+            return $route;
+        });
+
+        $this->assertTrue($request->routeIs('foo.bar'));
+        $this->assertFalse($request->routeIs('foo.foo'));
+    }
+
     public function testAjaxMethod()
     {
         $request = Request::create('/', 'GET');
@@ -693,8 +708,8 @@ class HttpRequestTest extends TestCase
 
         // Parameter 'empty' is '', then it ISSET and is EMPTY.
         $this->assertEquals($request->empty, '');
-        $this->assertEquals(isset($request->empty), true);
-        $this->assertEquals(empty($request->empty), true);
+        $this->assertTrue(isset($request->empty));
+        $this->assertTrue(empty($request->empty));
 
         // Parameter 'undefined' is undefined/null, then it NOT ISSET and is EMPTY.
         $this->assertEquals($request->undefined, null);
@@ -711,7 +726,8 @@ class HttpRequestTest extends TestCase
         });
 
         // Router parameter 'foo' is 'bar', then it ISSET and is NOT EMPTY.
-        $this->assertEquals($request->foo, 'bar');
+        $this->assertEquals('bar', $request->foo);
+        $this->assertEquals('bar', $request['foo']);
         $this->assertEquals(isset($request->foo), true);
         $this->assertEquals(empty($request->foo), false);
 

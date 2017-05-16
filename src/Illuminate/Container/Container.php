@@ -241,9 +241,11 @@ class Container implements ArrayAccess, ContainerContract
     protected function getClosure($abstract, $concrete)
     {
         return function ($container, $parameters = []) use ($abstract, $concrete) {
-            $method = ($abstract == $concrete) ? 'build' : 'make';
+            if ($abstract == $concrete) {
+                return $container->build($concrete);
+            }
 
-            return $container->$method($concrete, $parameters);
+            return $container->make($concrete, $parameters);
         };
     }
 
@@ -355,6 +357,8 @@ class Container implements ArrayAccess, ContainerContract
     {
         $this->removeAbstractAlias($abstract);
 
+        $isBound = $this->bound($abstract);
+
         unset($this->aliases[$abstract]);
 
         // We'll check to determine if this type has been bound before, and if it has
@@ -362,7 +366,7 @@ class Container implements ArrayAccess, ContainerContract
         // can be updated with consuming classes that have gotten resolved here.
         $this->instances[$abstract] = $instance;
 
-        if ($this->bound($abstract)) {
+        if ($isBound) {
             $this->rebound($abstract);
         }
     }
@@ -545,26 +549,27 @@ class Container implements ArrayAccess, ContainerContract
     }
 
     /**
-     * Resolve the given type with the given parameter overrides.
+     * An alias function name for make().
      *
      * @param  string  $abstract
      * @param  array  $parameters
      * @return mixed
      */
-    public function makeWith($abstract, array $parameters)
+    public function makeWith($abstract, array $parameters = [])
     {
-        return $this->resolve($abstract, $parameters);
+        return $this->make($abstract, $parameters);
     }
 
     /**
      * Resolve the given type from the container.
      *
      * @param  string  $abstract
+     * @param  array  $parameters
      * @return mixed
      */
-    public function make($abstract)
+    public function make($abstract, array $parameters = [])
     {
-        return $this->resolve($abstract);
+        return $this->resolve($abstract, $parameters);
     }
 
     /**
@@ -576,8 +581,10 @@ class Container implements ArrayAccess, ContainerContract
      */
     protected function resolve($abstract, $parameters = [])
     {
+        $abstract = $this->getAlias($abstract);
+
         $needsContextualBuild = ! empty($parameters) || ! is_null(
-            $this->getContextualConcrete($abstract = $this->getAlias($abstract))
+            $this->getContextualConcrete($abstract)
         );
 
         // If an instance of the type is currently being managed as a singleton we'll
@@ -713,7 +720,7 @@ class Container implements ArrayAccess, ContainerContract
         // hand back the results of the functions, which allows functions to be
         // used as resolvers for more fine-tuned resolution of these objects.
         if ($concrete instanceof Closure) {
-            return $concrete($this, end($this->with));
+            return $concrete($this, $this->getLastParameterOverride());
         }
 
         $reflector = new ReflectionClass($concrete);
@@ -784,14 +791,16 @@ class Container implements ArrayAccess, ContainerContract
     }
 
     /**
-     * Determine if the given dependency has a parameter override from makeWith.
+     * Determine if the given dependency has a parameter override.
      *
      * @param  \ReflectionParameter  $dependency
      * @return bool
      */
     protected function hasParameterOverride($dependency)
     {
-        return array_key_exists($dependency->name, end($this->with));
+        return array_key_exists(
+            $dependency->name, $this->getLastParameterOverride()
+        );
     }
 
     /**
@@ -802,7 +811,17 @@ class Container implements ArrayAccess, ContainerContract
      */
     protected function getParameterOverride($dependency)
     {
-        return end($this->with)[$dependency->name];
+        return $this->getLastParameterOverride()[$dependency->name];
+    }
+
+    /**
+     * Get the last parameter override.
+     *
+     * @return array
+     */
+    protected function getLastParameterOverride()
+    {
+        return count($this->with) ? end($this->with) : [];
     }
 
     /**

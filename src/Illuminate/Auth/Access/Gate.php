@@ -118,6 +118,30 @@ class Gate implements GateContract
     }
 
     /**
+     * Define abilities for a resource.
+     *
+     * @param  string  $name
+     * @param  string  $class
+     * @param  array   $abilities
+     * @return $this
+     */
+    public function resource($name, $class, array $abilities = null)
+    {
+        $abilities = $abilities ?: [
+            'view'   => 'view',
+            'create' => 'create',
+            'update' => 'update',
+            'delete' => 'delete',
+        ];
+
+        foreach ($abilities as $ability => $method) {
+            $this->define($name.'.'.$ability, $class.'@'.$method);
+        }
+
+        return $this;
+    }
+
+    /**
      * Create the ability callback for a callback string.
      *
      * @param  string  $callback
@@ -330,19 +354,19 @@ class Gate implements GateContract
      */
     protected function resolveAuthCallback($user, $ability, array $arguments)
     {
-        if (isset($arguments[0])) {
-            if (! is_null($policy = $this->getPolicyFor($arguments[0]))) {
-                return $this->resolvePolicyCallback($user, $ability, $arguments, $policy);
-            }
+        if (isset($arguments[0]) &&
+            ! is_null($policy = $this->getPolicyFor($arguments[0])) &&
+            $callback = $this->resolvePolicyCallback($user, $ability, $arguments, $policy)) {
+            return $callback;
         }
 
         if (isset($this->abilities[$ability])) {
             return $this->abilities[$ability];
-        } else {
-            return function () {
-                return false;
-            };
         }
+
+        return function () {
+            return false;
+        };
     }
 
     /**
@@ -390,10 +414,14 @@ class Gate implements GateContract
      * @param  string  $ability
      * @param  array  $arguments
      * @param  mixed  $policy
-     * @return callable
+     * @return bool|callable
      */
     protected function resolvePolicyCallback($user, $ability, array $arguments, $policy)
     {
+        if (! is_callable([$policy, $this->formatAbilityToMethod($ability)])) {
+            return false;
+        }
+
         return function () use ($user, $ability, $arguments, $policy) {
             // This callback will be responsible for calling the policy's before method and
             // running this policy method if necessary. This is used to when objects are
@@ -470,5 +498,15 @@ class Gate implements GateContract
     protected function resolveUser()
     {
         return call_user_func($this->userResolver);
+    }
+
+    /**
+     * Get all of the defined abilities.
+     *
+     * @return array
+     */
+    public function abilities()
+    {
+        return $this->abilities;
     }
 }

@@ -887,6 +887,40 @@ if (! function_exists('tap')) {
     }
 }
 
+if (! function_exists('throw_if')) {
+    /**
+     * Throw the given exception if the given boolean is true.
+     *
+     * @param  bool  $boolean
+     * @param  \Throwable|string  $exception
+     * @param  string  $message
+     * @return void
+     */
+    function throw_if($boolean, $exception, $message = '')
+    {
+        if ($boolean) {
+            throw (is_string($exception) ? new $exception($message) : $exception);
+        }
+    }
+}
+
+if (! function_exists('throw_unless')) {
+    /**
+     * Throw the given exception unless the given boolean is true.
+     *
+     * @param  bool  $boolean
+     * @param  \Throwable|string  $exception
+     * @param  string  $message
+     * @return void
+     */
+    function throw_unless($boolean, $exception, $message)
+    {
+        if (! $boolean) {
+            throw (is_string($exception) ? new $exception($message) : $exception);
+        }
+    }
+}
+
 if (! function_exists('title_case')) {
     /**
      * Convert a value to title case.
