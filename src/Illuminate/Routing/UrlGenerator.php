@@ -433,7 +433,7 @@ class UrlGenerator implements UrlGeneratorContract
             $path = call_user_func($this->formatPathUsing, $path);
         }
 
-        return trim($root.$path, '/');
+        return $root.$path;
     }
 
     /**
