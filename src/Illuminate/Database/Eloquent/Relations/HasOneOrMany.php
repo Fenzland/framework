@@ -47,6 +47,19 @@ abstract class HasOneOrMany extends Relation
     }
 
     /**
+     * Create and return an un-saved instance of the related model.
+     *
+     * @param  array  $attributes
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function make(array $attributes = [])
+    {
+        return tap($this->related->newInstance($attributes), function ($instance) {
+            $instance->setAttribute($this->getForeignKeyName(), $this->getParentKey());
+        });
+    }
+
+    /**
      * Set the base constraints on the relation query.
      *
      * @return void
@@ -265,7 +278,7 @@ abstract class HasOneOrMany extends Relation
      * @param  array  $attributes
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function create(array $attributes)
+    public function create(array $attributes = [])
     {
         return tap($this->related->newInstance($attributes), function ($instance) {
             $instance->setAttribute($this->getForeignKeyName(), $this->getParentKey());

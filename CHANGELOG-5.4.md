@@ -1,13 +1,98 @@
 # Release Notes for 5.4.x
 
-## [Unreleased]
+## v5.4.27 (2017-06-15)
+
+### Added
+- Added `Collection::diffAssoc()` method ([#19604](https://github.com/laravel/framework/pull/19604))
+
+### Changed
+- Updated PHPUnit whitelist ([#19609](https://github.com/laravel/framework/pull/19609))
+
+### Fixed
+- Update timestamps on soft delete only when they are used ([#19627](https://github.com/laravel/framework/pull/19627))
+
+
+## v5.4.26 (2017-06-13)
+
+### Added
+- Added `Event::nextRunDate()` method ([#19537](https://github.com/laravel/framework/pull/19537), [09dd336](https://github.com/laravel/framework/commit/09dd336b5146afa9278064c2f7cd901f55e10fc0))
+- Added null safe operator `<=>` to query builder operators list ([#19539](https://github.com/laravel/framework/pull/19539))
+- Added `Macroable` trait to `RequestGuard` ([#19569](https://github.com/laravel/framework/pull/19569))
+
+### Changed
+- Touch `updated_at` timestamp when soft deleting ([#19538](https://github.com/laravel/framework/pull/19538))
+- Accept argument list in `Rule::in()` and `Rule::notIn()` ([#19555](https://github.com/laravel/framework/pull/19555))
+- Support checking for strings job names using `QueueFake` ([#19575](https://github.com/laravel/framework/pull/19575))
+- Improved image ratio validation precision ([#19542](https://github.com/laravel/framework/pull/19542))
+
+### Fixed
+- Resume scheduled task if an error occurs ([#19419](https://github.com/laravel/framework/pull/19419))
+- Decode HTML entities in plain text emails ([#19518](https://github.com/laravel/framework/pull/19518))
+- Added missing locales to `MessageSelector::getPluralIndex()` ([#19562](https://github.com/laravel/framework/pull/19562))
+- Use strict check when object is passed to `Collection::contains()` ([#19568](https://github.com/laravel/framework/pull/19568))
+- Fixed jobs with a timeout of `0` ([#19586](https://github.com/laravel/framework/pull/19586))
+- Never pass `Throwable` to `stopWorkerIfLostConnection()` ([#19591](https://github.com/laravel/framework/pull/19591))
+
+
+## v5.4.25 (2017-06-07)
+
+### Added
+- Added `Macroable` trait to `FactoryBuilder` ([#19425](https://github.com/laravel/framework/pull/19425))
+- Allow a plain text alternative view when using markdown within Mailables ([#19436](https://github.com/laravel/framework/pull/19436), [ad2eaf7](https://github.com/laravel/framework/commit/ad2eaf72d7fc003a98215d4a373ea603658c646a))
+- Added nested transactions support for SqlServer ([#19439](https://github.com/laravel/framework/pull/19439))
+
+### Changed
+- Moved `env()` helper to Support component ([#19409](https://github.com/laravel/framework/pull/19409))
+- Prevent `BadMethodCallException` in `RedirectResponse::withErrors()` ([#19426](https://github.com/laravel/framework/pull/19426))
+- Suppress error if calling `Str::replaceFirst()` with an empty search ([#19427](https://github.com/laravel/framework/pull/19427))
+- Removed the `callable` type hint for `array_sort()` ([#19483](https://github.com/laravel/framework/pull/19483))
+- Return the used traits from `TestCase::setUpTraits()` ([#19486](https://github.com/laravel/framework/pull/19486))
+
+### Fixed
+- Fixes and optimizations for `Str::after()` ([#19428](https://github.com/laravel/framework/pull/19428))
+- Fixed queue size when using Beanstalkd driver ([#19465](https://github.com/laravel/framework/pull/19465))
+- Check if a mutex can be created before running the callback task in `CallbackEvent::run()` ([#19466](https://github.com/laravel/framework/pull/19466))
+- Flip expected and actual value on `TestResponse::assertCookie()` ([#19495](https://github.com/laravel/framework/pull/19495))
+- Fixed undefined variable error in `Mailable` class ([#19504](https://github.com/laravel/framework/pull/19504))
+- Prevent error notice when `database.collation` is not set ([#19507](https://github.com/laravel/framework/pull/19507))
+
+
+## v5.4.24 (2017-05-30)
 
 ### Added
 - Support magic controller methods ([#19168](https://github.com/laravel/framework/pull/19168))
 - Added `Gate` resources ([#19124](https://github.com/laravel/framework/pull/19124))
+- Added `Request::routeIs()` method ([#19202](https://github.com/laravel/framework/pull/19202), [26681eb](https://github.com/laravel/framework/commit/26681eb1c8ba35a0129ad47d4f0f03af9c2baa45))
+- Route `Route::isName()` shorthand method ([#19227](https://github.com/laravel/framework/pull/19227))
+- Added support for custom columns in `softDeletes()` method ([#19203](https://github.com/laravel/framework/pull/19203))
+- Added `ManagesLayouts::getSection()` method ([#19213](https://github.com/laravel/framework/pull/19213))
+- Added `Model::refresh()` shorthand ([#19174](https://github.com/laravel/framework/pull/19174))
+- Added `Container::forgetExtenders()` method ([#19269](https://github.com/laravel/framework/pull/19269), [7c17bf5](https://github.com/laravel/framework/commit/7c17bf540f37f8b4667be5332c94d7423780ca83))
+- Added `Filesystem::hash()` method ([#19256](https://github.com/laravel/framework/pull/19256))
+- Added `TestResponse::assertViewIs()` method ([#19291](https://github.com/laravel/framework/pull/19291))
+- Added `path` to `Paginator` ([#19314](https://github.com/laravel/framework/pull/19314))
+- Added `Collection::concat()` method ([#19318](https://github.com/laravel/framework/pull/19318), [0f5337f](https://github.com/laravel/framework/commit/0f5337f854ecdd722e7e289ff58cc252337e7a9d))
+- Added `make()` method to `HasOneOrMany` and `MorphOneOrMany` relations ([#19307](https://github.com/laravel/framework/pull/19307))
+- Added `str_after()` helper function ([#19357](https://github.com/laravel/framework/pull/19357))
+- Added `Router::apiResource()` method ([#19347](https://github.com/laravel/framework/pull/19347))
+
+### Changed
+- Move `$sizeRules` and `$numericRules` properties from `FormatsMessages` to `Validator` ([dc7e7cb](https://github.com/laravel/framework/commit/dc7e7cb26500fcba91e7e32762e367d59b12913b))
+- Allows calls to `Collection::times()` without the `$callback` parameter ([#19278](https://github.com/laravel/framework/pull/19278))
+- Don't ignore jobs with a timeout of `0` ([#19266](https://github.com/laravel/framework/pull/19266))
+- Resolve database paginators from the container ([#19328](https://github.com/laravel/framework/pull/19328))
+- Added `news` to `Pluralizer::$uncountable()` ([#19353](https://github.com/laravel/framework/pull/19353))
+- Switched to using `app()->getLocale()` in `app.stub` ([#19405](https://github.com/laravel/framework/pull/19405))
 
 ### Fixed
 - Fixed `Container::makeWith()` not using parameters when resolving interfaces ([#19178](https://github.com/laravel/framework/pull/19178))
+- Stop validating Memcached connection ([#19192](https://github.com/laravel/framework/pull/19192))
+- Fixed the position of `bound()` in `Container::instance()` ([#19207](https://github.com/laravel/framework/pull/19207))
+- Prevent applying global scopes on the factory while setting the connection ([#19258](https://github.com/laravel/framework/pull/19258))
+- Fixed database connection issue in queue worker ([#19263](https://github.com/laravel/framework/pull/19263))
+- Don't use HTML comments in notification email template ([#19289](https://github.com/laravel/framework/pull/19289))
+- Fire rebinding callback when using `bind()` method to bind abstract ([#19288](https://github.com/laravel/framework/pull/19288))
+- Return `0` from `callScope()` if `$query->wheres` is `null` ([#19381](https://github.com/laravel/framework/pull/19381))
 
 
 ## v5.4.23 (2017-05-11)

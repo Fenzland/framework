@@ -137,6 +137,18 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertFalse(isset($model['with']));
     }
 
+    public function testOnly()
+    {
+        $model = new EloquentModelStub;
+        $model->first_name = 'taylor';
+        $model->last_name = 'otwell';
+        $model->project = 'laravel';
+
+        $this->assertEquals(['project' => 'laravel'], $model->only('project'));
+        $this->assertEquals(['first_name' => 'taylor', 'last_name' => 'otwell'], $model->only('first_name', 'last_name'));
+        $this->assertEquals(['first_name' => 'taylor', 'last_name' => 'otwell'], $model->only(['first_name', 'last_name']));
+    }
+
     public function testNewInstanceReturnsNewInstanceWithAttributesSet()
     {
         $model = new EloquentModelStub;
@@ -411,7 +423,7 @@ class DatabaseEloquentModelTest extends TestCase
 
     public function testFromDateTime()
     {
-        $model = new EloquentModelStub();
+        $model = new EloquentModelStub;
 
         $value = \Carbon\Carbon::parse('2015-04-17 22:59:01');
         $this->assertEquals('2015-04-17 22:59:01', $model->fromDateTime($value));
@@ -583,7 +595,7 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertTrue($model->push());
         $this->assertEquals(1, $model->id);
         $this->assertTrue($model->exists);
-        $this->assertEquals(0, count($model->relationMany));
+        $this->assertCount(0, $model->relationMany);
     }
 
     public function testPushManyRelation()
@@ -617,7 +629,7 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertTrue($model->push());
         $this->assertEquals(1, $model->id);
         $this->assertTrue($model->exists);
-        $this->assertEquals(2, count($model->relationMany));
+        $this->assertCount(2, $model->relationMany);
         $this->assertEquals([2, 3], $model->relationMany->pluck('id')->all());
     }
 

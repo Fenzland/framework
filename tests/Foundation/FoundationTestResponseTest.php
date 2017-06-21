@@ -12,6 +12,21 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FoundationTestResponseTest extends TestCase
 {
+    public function testAssertViewIs()
+    {
+        $baseResponse = tap(new Response, function ($response) {
+            $response->setContent(\Mockery::mock(View::class, [
+                'render' => 'hello world',
+                'getData' => ['foo' => 'bar'],
+                'getName' => 'dir.my-view',
+            ]));
+        });
+
+        $response = TestResponse::fromBaseResponse($baseResponse);
+
+        $response->assertViewIs('dir.my-view');
+    }
+
     public function testAssertViewHas()
     {
         $baseResponse = tap(new Response, function ($response) {
@@ -132,7 +147,7 @@ class FoundationTestResponseTest extends TestCase
 
     public function testCanBeCreatedFromBinaryFileResponses()
     {
-        $files = new Filesystem();
+        $files = new Filesystem;
         $tempDir = __DIR__.'/tmp';
         $files->makeDirectory($tempDir, 0755, false, true);
         $files->put($tempDir.'/file.txt', 'Hello World');

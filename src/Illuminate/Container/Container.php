@@ -343,6 +343,10 @@ class Container implements ArrayAccess, ContainerContract
             $this->rebound($abstract);
         } else {
             $this->extenders[$abstract][] = $closure;
+
+            if ($this->resolved($abstract)) {
+                $this->rebound($abstract);
+            }
         }
     }
 
@@ -351,7 +355,7 @@ class Container implements ArrayAccess, ContainerContract
      *
      * @param  string  $abstract
      * @param  mixed   $instance
-     * @return void
+     * @return mixed
      */
     public function instance($abstract, $instance)
     {
@@ -369,6 +373,8 @@ class Container implements ArrayAccess, ContainerContract
         if ($isBound) {
             $this->rebound($abstract);
         }
+
+        return $instance;
     }
 
     /**
@@ -1063,6 +1069,17 @@ class Container implements ArrayAccess, ContainerContract
         }
 
         return [];
+    }
+
+    /**
+     * Remove all of the extender callbacks for a given type.
+     *
+     * @param  string  $abstract
+     * @return void
+     */
+    public function forgetExtenders($abstract)
+    {
+        unset($this->extenders[$this->getAlias($abstract)]);
     }
 
     /**

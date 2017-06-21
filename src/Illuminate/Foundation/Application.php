@@ -7,6 +7,7 @@ use RuntimeException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Log\LogServiceProvider;
@@ -176,6 +177,10 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
         $this->instance('app', $this);
 
         $this->instance(Container::class, $this);
+
+        $this->instance(PackageManifest::class, new PackageManifest(
+            new Filesystem, $this->basePath(), $this->getCachedPackagesPath()
+        ));
     }
 
     /**
@@ -515,7 +520,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     {
         $args = isset($_SERVER['argv']) ? $_SERVER['argv'] : null;
 
-        return $this['env'] = (new EnvironmentDetector())->detect($callback, $args);
+        return $this['env'] = (new EnvironmentDetector)->detect($callback, $args);
     }
 
     /**
@@ -545,8 +550,15 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function registerConfiguredProviders()
     {
+        $providers = Collection::make($this->config['app.providers'])
+                        ->partition(function ($provider) {
+                            return Str::startsWith($provider, 'Illuminate\\');
+                        });
+
+        $providers->splice(1, 0, [$this->make(PackageManifest::class)->providers()]);
+
         (new ProviderRepository($this, new Filesystem, $this->getCachedServicesPath()))
-                    ->load($this->config['app.providers']);
+                    ->load($providers->collapse()->toArray());
     }
 
     /**
@@ -836,6 +848,16 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     public function getCachedServicesPath()
     {
         return $this->bootstrapPath().'/cache/services.php';
+    }
+
+    /**
+     * Get the path to the cached packages.php file.
+     *
+     * @return string
+     */
+    public function getCachedPackagesPath()
+    {
+        return $this->bootstrapPath().'/cache/packages.php';
     }
 
     /**

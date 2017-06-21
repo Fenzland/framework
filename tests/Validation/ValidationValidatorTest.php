@@ -1015,6 +1015,15 @@ class ValidationValidatorTest extends TestCase
 
         $v = new Validator($trans, ['foo' => '1e2', 'baz' => '100'], ['foo' => 'Different:baz']);
         $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['foo' => 'bar', 'fuu' => 'baa', 'baz' => 'boom'], ['foo' => 'Different:fuu,baz']);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['foo' => 'bar', 'baz' => 'boom'], ['foo' => 'Different:fuu,baz']);
+        $this->assertFalse($v->passes());
+
+        $v = new Validator($trans, ['foo' => 'bar', 'fuu' => 'bar', 'baz' => 'boom'], ['foo' => 'Different:fuu,baz']);
+        $this->assertFalse($v->passes());
     }
 
     public function testValidateAccepted()
@@ -1975,6 +1984,9 @@ class ValidationValidatorTest extends TestCase
         $this->assertTrue($v->passes());
     }
 
+    /**
+     * @group dimension
+     */
     public function testValidateImageDimensions()
     {
         // Knowing that demo image.png has width = 3 and height = 2
@@ -2040,6 +2052,14 @@ class ValidationValidatorTest extends TestCase
 
         $v = new Validator($trans, ['x' => $emptyUploadedFile], ['x' => 'dimensions:min_width=1']);
         $this->assertTrue($v->fails());
+
+        // Knowing that demo image3.png has width = 7 and height = 10
+        $uploadedFile = new \Symfony\Component\HttpFoundation\File\UploadedFile(__DIR__.'/fixtures/image3.png', '', null, null, null, true);
+        $trans = $this->getIlluminateArrayTranslator();
+
+        // Ensure validation doesn't erroneously fail when ratio has no fractional part
+        $v = new Validator($trans, ['x' => $uploadedFile], ['x' => 'dimensions:ratio=2/3']);
+        $this->assertTrue($v->passes());
     }
 
     /**
@@ -2250,7 +2270,7 @@ class ValidationValidatorTest extends TestCase
         $v = new Validator($trans, ['x' => ['Not', 'a', 'date']], ['x' => 'date']);
         $this->assertTrue($v->fails());
 
-        $v = new Validator($trans, ['x' => new DateTime()], ['x' => 'date']);
+        $v = new Validator($trans, ['x' => new DateTime], ['x' => 'date']);
         $this->assertTrue($v->passes());
 
         $v = new Validator($trans, ['x' => '2000-01-01'], ['x' => 'date_format:Y-m-d']);

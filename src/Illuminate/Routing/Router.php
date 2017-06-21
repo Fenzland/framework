@@ -15,6 +15,7 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Contracts\Routing\BindingRegistrar;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Illuminate\Contracts\Routing\Registrar as RegistrarContract;
@@ -258,6 +259,21 @@ class Router implements RegistrarContract, BindingRegistrar
         return new PendingResourceRegistration(
             $registrar, $name, $controller, $options
         );
+    }
+
+    /**
+     * Route an api resource to a controller.
+     *
+     * @param  string  $name
+     * @param  string  $controller
+     * @param  array  $options
+     * @return void
+     */
+    public function apiResource($name, $controller, array $options = [])
+    {
+        $this->resource($name, $controller, array_merge([
+            'only' => ['index', 'show', 'store', 'update', 'destroy'],
+        ], $options));
     }
 
     /**
@@ -603,6 +619,10 @@ class Router implements RegistrarContract, BindingRegistrar
      */
     public static function prepareResponse($request, $response)
     {
+        if ($response instanceof Responsable) {
+            $response = $response->toResponse();
+        }
+
         if ($response instanceof PsrResponseInterface) {
             $response = (new HttpFoundationFactory)->createResponse($response);
         } elseif (! $response instanceof SymfonyResponse &&
@@ -941,28 +961,23 @@ class Router implements RegistrarContract, BindingRegistrar
     /**
      * Alias for the "currentRouteNamed" method.
      *
+     * @param  dynamic  $patterns
      * @return bool
      */
-    public function is()
+    public function is(...$patterns)
     {
-        foreach (func_get_args() as $pattern) {
-            if (Str::is($pattern, $this->currentRouteName())) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->currentRouteNamed(...$patterns);
     }
 
     /**
-     * Determine if the current route matches a given name.
+     * Determine if the current route matches a pattern.
      *
-     * @param  string  $name
+     * @param  dynamic  $patterns
      * @return bool
      */
-    public function currentRouteNamed($name)
+    public function currentRouteNamed(...$patterns)
     {
-        return $this->current() ? $this->current()->getName() == $name : false;
+        return $this->current() && $this->current()->named(...$patterns);
     }
 
     /**

@@ -2,6 +2,10 @@
 
 namespace Illuminate\Database\Concerns;
 
+use Illuminate\Container\Container;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 trait BuildsQueries
 {
     /**
@@ -32,9 +36,11 @@ trait BuildsQueries
             // On each chunk result set, we will pass them to the callback and then let the
             // developer take care of everything within the callback, which allows us to
             // keep the memory low for spinning through large result sets for working.
-            if ($callback($results) === false) {
+            if ($callback($results, $page) === false) {
                 return false;
             }
+
+            unset($results);
 
             $page++;
         } while ($countResults == $count);
@@ -75,8 +81,8 @@ trait BuildsQueries
      * Apply the callback's query changes if the given "value" is true.
      *
      * @param  mixed  $value
-     * @param  \Closure  $callback
-     * @param  \Closure  $default
+     * @param  callable  $callback
+     * @param  callable  $default
      * @return mixed
      */
     public function when($value, $callback, $default = null)
@@ -88,5 +94,39 @@ trait BuildsQueries
         }
 
         return $this;
+    }
+
+    /**
+     * Create a new length-aware paginator instance.
+     *
+     * @param  \Illuminate\Support\Collection  $items
+     * @param  int  $total
+     * @param  int  $perPage
+     * @param  int  $currentPage
+     * @param  array  $options
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    protected function paginator($items, $total, $perPage, $currentPage, $options)
+    {
+        return Container::getInstance()->makeWith(LengthAwarePaginator::class, compact(
+            'items', 'total', 'perPage', 'currentPage', 'options'
+        ));
+    }
+
+    /**
+     * Create a new simple paginator instance.
+     *
+     * @param  \Illuminate\Support\Collection  $items
+     * @param  int $total
+     * @param  int $perPage
+     * @param  int $currentPage
+     * @param  array  $options
+     * @return \Illuminate\Pagination\Paginator
+     */
+    protected function simplePaginator($items, $perPage, $currentPage, $options)
+    {
+        return Container::getInstance()->makeWith(Paginator::class, compact(
+            'items', 'perPage', 'currentPage', 'options'
+        ));
     }
 }

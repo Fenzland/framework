@@ -728,7 +728,7 @@ trait HasAttributes
      */
     public function fromDateTime($value)
     {
-        return $this->asDateTime($value)->format(
+        return is_null($value) ? $value : $this->asDateTime($value)->format(
             $this->getDateFormat()
         );
     }
@@ -880,6 +880,23 @@ trait HasAttributes
     public function getOriginal($key = null, $default = null)
     {
         return Arr::get($this->original, $key, $default);
+    }
+
+    /**
+     * Get a subset of the model's attributes.
+     *
+     * @param  array|mixed  $attributes
+     * @return array
+     */
+    public function only($attributes)
+    {
+        $results = [];
+
+        foreach (is_array($attributes) ? $attributes : func_get_args() as $attribute) {
+            $results[$attribute] = $this->getAttribute($attribute);
+        }
+
+        return $results;
     }
 
     /**

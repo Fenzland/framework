@@ -181,6 +181,16 @@ class ContainerTest extends TestCase
         $this->assertEquals('foobarbaz', $container->make('foo'));
     }
 
+    public function testBindingAnInstanceReturnsTheInstance()
+    {
+        $container = new Container;
+
+        $bound = new StdClass;
+        $resolved = $container->instance('foo', $bound);
+
+        $this->assertSame($bound, $resolved);
+    }
+
     public function testExtendInstancesArePreserved()
     {
         $container = new Container;
@@ -234,6 +244,76 @@ class ContainerTest extends TestCase
         $container['foo'] = 'foo';
 
         $this->assertEquals('foobar', $container->make('foo'));
+    }
+
+    public function testExtendInstanceRebindingCallback()
+    {
+        $_SERVER['_test_rebind'] = false;
+
+        $container = new Container;
+        $container->rebinding('foo', function () {
+            $_SERVER['_test_rebind'] = true;
+        });
+
+        $obj = new StdClass;
+        $container->instance('foo', $obj);
+
+        $container->extend('foo', function ($obj, $container) {
+            return $obj;
+        });
+
+        $this->assertTrue($_SERVER['_test_rebind']);
+    }
+
+    public function testExtendBindRebindingCallback()
+    {
+        $_SERVER['_test_rebind'] = false;
+
+        $container = new Container;
+        $container->rebinding('foo', function () {
+            $_SERVER['_test_rebind'] = true;
+        });
+        $container->bind('foo', function () {
+            $obj = new StdClass;
+
+            return $obj;
+        });
+
+        $this->assertFalse($_SERVER['_test_rebind']);
+
+        $container->make('foo');
+
+        $container->extend('foo', function ($obj, $container) {
+            return $obj;
+        });
+
+        $this->assertTrue($_SERVER['_test_rebind']);
+    }
+
+    public function testUnsetExtend()
+    {
+        $container = new Container;
+        $container->bind('foo', function () {
+            $obj = new StdClass;
+            $obj->foo = 'bar';
+
+            return $obj;
+        });
+
+        $container->extend('foo', function ($obj, $container) {
+            $obj->bar = 'baz';
+
+            return $obj;
+        });
+
+        unset($container['foo']);
+        $container->forgetExtenders('foo');
+
+        $container->bind('foo', function () {
+            return 'foo';
+        });
+
+        $this->assertEquals('foo', $container->make('foo'));
     }
 
     public function testResolutionOfDefaultParameters()
@@ -445,7 +525,7 @@ class ContainerTest extends TestCase
     public function testCallWithCallableArray()
     {
         $container = new Container;
-        $stub = new ContainerTestCallStub();
+        $stub = new ContainerTestCallStub;
         $result = $container->call([$stub, 'work'], ['foo', 'bar']);
         $this->assertEquals(['foo', 'bar'], $result);
     }

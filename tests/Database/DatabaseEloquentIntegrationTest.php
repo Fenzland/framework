@@ -4,6 +4,7 @@ namespace Illuminate\Tests\Database;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Model as Eloquent;
@@ -479,7 +480,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestUser::has('friends')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -492,7 +493,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('email', 'abigailotwell@gmail.com');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -504,7 +505,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestUser::has('friends.friends')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -518,7 +519,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('email', 'foo@gmail.com');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -529,7 +530,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestUser::has('friendsOne')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -541,7 +542,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestUser::has('friendsOne.friendsTwo')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('taylorotwell@gmail.com', $results->first()->email);
     }
 
@@ -552,7 +553,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestPost::has('parentPost')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Child Post', $results->first()->name);
     }
 
@@ -574,7 +575,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('name', 'Parent Post');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Child Post', $results->first()->name);
     }
 
@@ -586,7 +587,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestPost::has('parentPost.parentPost')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Child Post', $results->first()->name);
     }
 
@@ -600,7 +601,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('name', 'Grandparent Post');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Child Post', $results->first()->name);
     }
 
@@ -611,7 +612,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestPost::has('childPosts')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Parent Post', $results->first()->name);
     }
 
@@ -624,7 +625,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('name', 'Child Post');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Parent Post', $results->first()->name);
     }
 
@@ -636,7 +637,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
 
         $results = EloquentTestPost::has('childPosts.childPosts')->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Grandparent Post', $results->first()->name);
     }
 
@@ -650,7 +651,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
             $query->where('name', 'Child Post');
         })->get();
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
         $this->assertEquals('Grandparent Post', $results->first()->name);
     }
 
@@ -675,7 +676,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
         $friend = $user->friends()->create(['email' => 'abigailotwell@gmail.com']);
 
         EloquentTestUser::first()->friends()->chunk(2, function ($friends) use ($user, $friend) {
-            $this->assertEquals(1, count($friends));
+            $this->assertCount(1, $friends);
             $this->assertEquals('abigailotwell@gmail.com', $friends->first()->email);
             $this->assertEquals($user->id, $friends->first()->pivot->user_id);
             $this->assertEquals($friend->id, $friends->first()->pivot->friend_id);
@@ -1067,6 +1068,51 @@ class DatabaseEloquentIntegrationTest extends TestCase
         $retrieved = EloquentTestUser::find(1);
 
         $this->assertTrue($saved->is($retrieved));
+    }
+
+    public function testFreshMethodOnModel()
+    {
+        $now = \Carbon\Carbon::now();
+        \Carbon\Carbon::setTestNow($now);
+
+        $storedUser1 = EloquentTestUser::create(['id' => 1, 'email' => 'taylorotwell@gmail.com']);
+        $storedUser1->newQuery()->update(['email' => 'dev@mathieutu.ovh', 'name' => 'Mathieu TUDISCO']);
+        $freshStoredUser1 = $storedUser1->fresh();
+
+        $storedUser2 = EloquentTestUser::create(['id' => 2, 'email' => 'taylorotwell@gmail.com']);
+        $storedUser2->newQuery()->update(['email' => 'dev@mathieutu.ovh']);
+        $freshStoredUser2 = $storedUser2->fresh();
+
+        $notStoredUser = new EloquentTestUser(['id' => 3, 'email' => 'taylorotwell@gmail.com']);
+        $freshNotStoredUser = $notStoredUser->fresh();
+
+        $this->assertEquals(['id' => 1, 'email' => 'taylorotwell@gmail.com', 'created_at' => $now, 'updated_at' => $now], $storedUser1->toArray());
+        $this->assertEquals(['id' => 1, 'name' => 'Mathieu TUDISCO', 'email' => 'dev@mathieutu.ovh', 'created_at' => $now, 'updated_at' => $now], $freshStoredUser1->toArray());
+        $this->assertInstanceOf(EloquentTestUser::class, $storedUser1);
+
+        $this->assertEquals(['id' => 2, 'email' => 'taylorotwell@gmail.com', 'created_at' => $now, 'updated_at' => $now], $storedUser2->toArray());
+        $this->assertEquals(['id' => 2, 'name' => null, 'email' => 'dev@mathieutu.ovh', 'created_at' => $now, 'updated_at' => $now], $freshStoredUser2->toArray());
+        $this->assertInstanceOf(EloquentTestUser::class, $storedUser2);
+
+        $this->assertEquals(['id' => 3, 'email' => 'taylorotwell@gmail.com'], $notStoredUser->toArray());
+        $this->assertEquals(null, $freshNotStoredUser);
+    }
+
+    public function testFreshMethodOnCollection()
+    {
+        EloquentTestUser::create(['id' => 1, 'email' => 'taylorotwell@gmail.com']);
+        EloquentTestUser::create(['id' => 2, 'email' => 'taylorotwell@gmail.com']);
+
+        $users = EloquentTestUser::all()
+            ->add(new EloquentTestUser(['id' => 3, 'email' => 'taylorotwell@gmail.com']));
+
+        EloquentTestUser::find(1)->update(['name' => 'Mathieu TUDISCO']);
+        EloquentTestUser::find(2)->update(['email' => 'dev@mathieutu.ovh']);
+
+        $this->assertEquals($users->map->fresh(), $users->fresh());
+
+        $users = new Collection();
+        $this->assertEquals($users->map->fresh(), $users->fresh());
     }
 
     /**
