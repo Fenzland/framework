@@ -215,6 +215,36 @@ class Router implements RegistrarContract, BindingRegistrar
     }
 
     /**
+     * Create a redirect from one URI to another.
+     *
+     * @param string  $uri
+     * @param string  $destination
+     * @param int  $status
+     * @return \Illuminate\Routing\Route
+     */
+    public function redirect($uri, $destination, $status = 301)
+    {
+        return $this->any($uri, '\Illuminate\Routing\RedirectController')
+                ->defaults('destination', $destination)
+                ->defaults('status', $status);
+    }
+
+    /**
+     * Register a new route that returns a view.
+     *
+     * @param  string  $uri
+     * @param  string  $view
+     * @param  array  $data
+     * @return \Illuminate\Routing\Route
+     */
+    public function view($uri, $view, $data = [])
+    {
+        return $this->get($uri, '\Illuminate\Routing\ViewController')
+                ->defaults('view', $view)
+                ->defaults('data', $data);
+    }
+
+    /**
      * Register a new route with the given verbs.
      *
      * @param  array|string  $methods
@@ -634,6 +664,10 @@ class Router implements RegistrarContract, BindingRegistrar
             $response = new JsonResponse($response);
         } elseif (! $response instanceof SymfonyResponse) {
             $response = new Response($response);
+        }
+
+        if ($response->getStatusCode() === Response::HTTP_NOT_MODIFIED) {
+            $response->setNotModified();
         }
 
         return $response->prepare($request);

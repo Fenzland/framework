@@ -170,6 +170,7 @@ class RouteRegistrarTest extends TestCase
 
     /**
      * @expectedException \BadMethodCallException
+     * @expectedExceptionMessage Method [missing] does not exist.
      */
     public function testRegisteringNonApprovedAttributesThrows()
     {
@@ -208,6 +209,16 @@ class RouteRegistrarTest extends TestCase
 
         $this->assertTrue($this->router->getRoutes()->hasNamedRoute('users.update'));
         $this->assertTrue($this->router->getRoutes()->hasNamedRoute('users.destroy'));
+    }
+
+    public function testUserCanRegisterApiResource()
+    {
+        $this->router->apiResource('users', \Illuminate\Tests\Routing\RouteRegistrarControllerStub::class);
+
+        $this->assertCount(5, $this->router->getRoutes());
+
+        $this->assertFalse($this->router->getRoutes()->hasNamedRoute('users.create'));
+        $this->assertFalse($this->router->getRoutes()->hasNamedRoute('users.edit'));
     }
 
     public function testCanNameRoutesOnRegisteredResource()

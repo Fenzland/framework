@@ -11,6 +11,7 @@ use CachingIterator;
 use JsonSerializable;
 use IteratorAggregate;
 use InvalidArgumentException;
+use Illuminate\Support\Debug\Dumper;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
@@ -244,6 +245,32 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     }
 
     /**
+     * Dump the collection and end the script.
+     *
+     * @return void
+     */
+    public function dd()
+    {
+        dd($this->all());
+    }
+
+    /**
+     * Dump the collection.
+     *
+     * @return void
+     */
+    public function dump()
+    {
+        (new static(func_get_args()))
+            ->push($this)
+            ->each(function ($item) {
+                (new Dumper)->dump($item);
+            });
+
+        return $this;
+    }
+
+    /**
      * Get the items in the collection that are not present in the given items.
      *
      * @param  mixed  $items
@@ -382,6 +409,19 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
         }
 
         return $this;
+    }
+
+    /**
+     * Apply the callback if the value is falsy.
+     *
+     * @param  bool  $value
+     * @param  callable  $callback
+     * @param  callable  $default
+     * @return mixed
+     */
+    public function unless($value, callable $callback, callable $default = null)
+    {
+        return $this->when(! $value, $callback, $default);
     }
 
     /**
@@ -1087,21 +1127,19 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      *
      * @throws \InvalidArgumentException
      */
-    public function random($amount = 1)
+    public function random($amount = null)
     {
-        if ($amount > ($count = $this->count())) {
-            throw new InvalidArgumentException("You requested {$amount} items, but there are only {$count} items in the collection.");
+        if (($requested = $amount ?: 1) > ($count = $this->count())) {
+            throw new InvalidArgumentException(
+                "You requested {$requested} items, but there are only {$count} items in the collection."
+            );
         }
 
-        $keys = array_rand($this->items, $amount);
-
-        if (count(func_get_args()) == 0) {
-            return $this->items[$keys];
+        if (is_null($amount)) {
+            return Arr::random($this->items);
         }
 
-        $keys = Arr::wrap($keys);
-
-        return new static(array_intersect_key($this->items, array_flip($keys)));
+        return new static(Arr::random($this->items, $amount));
     }
 
     /**

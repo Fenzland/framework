@@ -6,11 +6,10 @@ use DateTime;
 use stdClass;
 use Exception;
 use Mockery as m;
-use Carbon\Carbon;
-use LogicException;
 use ReflectionClass;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,7 +32,7 @@ class DatabaseEloquentModelTest extends TestCase
         Carbon::setTestNow(null);
 
         \Illuminate\Database\Eloquent\Model::unsetEventDispatcher();
-        \Carbon\Carbon::resetToStringFormat();
+        \Illuminate\Support\Carbon::resetToStringFormat();
     }
 
     public function testAttributeManipulation()
@@ -352,8 +351,8 @@ class DatabaseEloquentModelTest extends TestCase
             'updated_at' => '2012-12-05',
         ]);
 
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
-        $this->assertInstanceOf('Carbon\Carbon', $model->updated_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->updated_at);
     }
 
     public function testTimestampsAreReturnedAsObjectsFromPlainDatesAndTimestamps()
@@ -365,35 +364,35 @@ class DatabaseEloquentModelTest extends TestCase
             'updated_at' => Carbon::now()->getTimestamp(),
         ]);
 
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
-        $this->assertInstanceOf('Carbon\Carbon', $model->updated_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->updated_at);
     }
 
     public function testTimestampsAreReturnedAsObjectsOnCreate()
     {
         $timestamps = [
-            'created_at' => \Carbon\Carbon::now(),
-            'updated_at' => \Carbon\Carbon::now(),
+            'created_at' => \Illuminate\Support\Carbon::now(),
+            'updated_at' => \Illuminate\Support\Carbon::now(),
         ];
         $model = new EloquentDateModelStub;
         \Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
-        $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('StdClass'));
+        $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('stdClass'));
         $mockConnection->shouldReceive('getQueryGrammar')->andReturn($mockConnection);
         $mockConnection->shouldReceive('getDateFormat')->andReturn('Y-m-d H:i:s');
         $instance = $model->newInstance($timestamps);
-        $this->assertInstanceOf('Carbon\Carbon', $instance->updated_at);
-        $this->assertInstanceOf('Carbon\Carbon', $instance->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $instance->updated_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $instance->created_at);
     }
 
     public function testDateTimeAttributesReturnNullIfSetToNull()
     {
         $timestamps = [
-            'created_at' => \Carbon\Carbon::now(),
-            'updated_at' => \Carbon\Carbon::now(),
+            'created_at' => \Illuminate\Support\Carbon::now(),
+            'updated_at' => \Illuminate\Support\Carbon::now(),
         ];
         $model = new EloquentDateModelStub;
         \Illuminate\Database\Eloquent\Model::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
-        $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('StdClass'));
+        $resolver->shouldReceive('connection')->andReturn($mockConnection = m::mock('stdClass'));
         $mockConnection->shouldReceive('getQueryGrammar')->andReturn($mockConnection);
         $mockConnection->shouldReceive('getDateFormat')->andReturn('Y-m-d H:i:s');
         $instance = $model->newInstance($timestamps);
@@ -406,26 +405,26 @@ class DatabaseEloquentModelTest extends TestCase
     {
         $model = new EloquentDateModelStub;
         $model->created_at = '2013-05-22 00:00:00';
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
 
         $model = new EloquentDateModelStub;
         $model->created_at = Carbon::now()->getTimestamp();
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
 
         $model = new EloquentDateModelStub;
         $model->created_at = 0;
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
 
         $model = new EloquentDateModelStub;
         $model->created_at = '2012-01-01';
-        $this->assertInstanceOf('Carbon\Carbon', $model->created_at);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->created_at);
     }
 
     public function testFromDateTime()
     {
         $model = new EloquentModelStub;
 
-        $value = \Carbon\Carbon::parse('2015-04-17 22:59:01');
+        $value = \Illuminate\Support\Carbon::parse('2015-04-17 22:59:01');
         $this->assertEquals('2015-04-17 22:59:01', $model->fromDateTime($value));
 
         $value = new DateTime('2015-04-17 22:59:01');
@@ -918,6 +917,7 @@ class DatabaseEloquentModelTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\MassAssignmentException
+     * @expectedExceptionMessage name
      */
     public function testGlobalGuarded()
     {
@@ -1294,7 +1294,8 @@ class DatabaseEloquentModelTest extends TestCase
     }
 
     /**
-     * @expectedException LogicException
+     * @expectedException \LogicException
+     * @expectedExceptionMessage Illuminate\Tests\Database\EloquentModelStub::incorrectRelationStub must return a relationship instance.
      */
     public function testGetModelAttributeMethodThrowsExceptionIfNotRelation()
     {
@@ -1369,7 +1370,7 @@ class DatabaseEloquentModelTest extends TestCase
         $model->syncOriginalAttribute('id');
         $model->foo = 2;
 
-        $model->shouldReceive('newQuery')->andReturn($query = m::mock('StdClass'));
+        $model->shouldReceive('newQuery')->andReturn($query = m::mock('stdClass'));
         $query->shouldReceive('where')->andReturn($query);
         $query->shouldReceive('increment');
 
@@ -1424,7 +1425,7 @@ class DatabaseEloquentModelTest extends TestCase
         $model->boolAttribute = 1;
         $model->booleanAttribute = 0;
         $model->objectAttribute = ['foo' => 'bar'];
-        $obj = new StdClass;
+        $obj = new stdClass;
         $obj->foo = 'bar';
         $model->arrayAttribute = $obj;
         $model->jsonAttribute = ['foo' => 'bar'];
@@ -1446,8 +1447,8 @@ class DatabaseEloquentModelTest extends TestCase
         $this->assertEquals(['foo' => 'bar'], $model->arrayAttribute);
         $this->assertEquals(['foo' => 'bar'], $model->jsonAttribute);
         $this->assertEquals('{"foo":"bar"}', $model->jsonAttributeValue());
-        $this->assertInstanceOf('Carbon\Carbon', $model->dateAttribute);
-        $this->assertInstanceOf('Carbon\Carbon', $model->datetimeAttribute);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->dateAttribute);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $model->datetimeAttribute);
         $this->assertEquals('1969-07-20', $model->dateAttribute->toDateString());
         $this->assertEquals('1969-07-20 22:56:00', $model->datetimeAttribute->toDateTimeString());
         $this->assertEquals(-14173440, $model->timestampAttribute);
@@ -1541,12 +1542,13 @@ class DatabaseEloquentModelTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\JsonEncodingException
+     * @expectedExceptionMessage Unable to encode attribute [objectAttribute] for model [Illuminate\Tests\Database\EloquentModelCastingStub] to JSON: Malformed UTF-8 characters, possibly incorrectly encoded.
      */
     public function testModelAttributeCastingFailsOnUnencodableData()
     {
         $model = new EloquentModelCastingStub;
         $model->objectAttribute = ['foo' => "b\xF8r"];
-        $obj = new StdClass;
+        $obj = new stdClass;
         $obj->foo = "b\xF8r";
         $model->arrayAttribute = $obj;
         $model->jsonAttribute = ['foo' => "b\xF8r"];
@@ -1839,7 +1841,7 @@ class EloquentModelDestroyStub extends Model
     {
         $mock = m::mock('Illuminate\Database\Eloquent\Builder');
         $mock->shouldReceive('whereIn')->once()->with('id', [1, 2, 3])->andReturn($mock);
-        $mock->shouldReceive('get')->once()->andReturn([$model = m::mock('StdClass')]);
+        $mock->shouldReceive('get')->once()->andReturn([$model = m::mock('stdClass')]);
         $model->shouldReceive('delete')->once();
 
         return $mock;

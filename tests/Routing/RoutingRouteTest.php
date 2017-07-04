@@ -2,11 +2,12 @@
 
 namespace Illuminate\Tests\Routing;
 
+use DateTime;
 use stdClass;
+use Mockery as m;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use UnexpectedValueException;
 use Illuminate\Routing\Router;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Events\Dispatcher;
@@ -19,6 +20,7 @@ use Illuminate\Routing\ResourceRegistrar;
 use Illuminate\Contracts\Routing\Registrar;
 use Illuminate\Auth\Middleware\Authenticate;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 
 class RoutingRouteTest extends TestCase
@@ -38,17 +40,17 @@ class RoutingRouteTest extends TestCase
         $this->assertEquals('hello', $router->dispatch(Request::create('foo/bar', 'GET'))->getContent());
 
         $router = $this->getRouter();
-        $route = $router->get('foo/bar', ['domain' => 'api.{name}.bar', function ($name) {
+        $router->get('foo/bar', ['domain' => 'api.{name}.bar', function ($name) {
             return $name;
         }]);
-        $route = $router->get('foo/bar', ['domain' => 'api.{name}.baz', function ($name) {
+        $router->get('foo/bar', ['domain' => 'api.{name}.baz', function ($name) {
             return $name;
         }]);
         $this->assertEquals('taylor', $router->dispatch(Request::create('http://api.taylor.bar/foo/bar', 'GET'))->getContent());
         $this->assertEquals('dayle', $router->dispatch(Request::create('http://api.dayle.baz/foo/bar', 'GET'))->getContent());
 
         $router = $this->getRouter();
-        $route = $router->get('foo/{age}', ['domain' => 'api.{name}.bar', function ($name, $age) {
+        $router->get('foo/{age}', ['domain' => 'api.{name}.bar', function ($name, $age) {
             return $name.$age;
         }]);
         $this->assertEquals('taylor25', $router->dispatch(Request::create('http://api.taylor.bar/foo/25', 'GET'))->getContent());
@@ -108,7 +110,7 @@ class RoutingRouteTest extends TestCase
         $this->assertFalse($router->is('bar'));
 
         $router = $this->getRouter();
-        $route = $router->get('foo/{file}', function ($file) {
+        $router->get('foo/{file}', function ($file) {
             return $file;
         });
         $this->assertEquals('oxygen%20', $router->dispatch(Request::create('http://test.com/foo/oxygen%2520', 'GET'))->getContent());
@@ -152,6 +154,20 @@ class RoutingRouteTest extends TestCase
             return 'closure';
         }]);
         $this->assertEquals('closure', $router->dispatch(Request::create('foo/bar', 'GET'))->getContent());
+    }
+
+    public function testNotModifiedResponseIsProperlyReturned()
+    {
+        $router = $this->getRouter();
+        $router->get('test', function () {
+            return (new Response('test', 304, ['foo' => 'bar']))->setLastModified(new DateTime);
+        });
+
+        $response = $router->dispatch(Request::create('test', 'GET'));
+        $this->assertSame(304, $response->getStatusCode());
+        $this->assertEmpty($response->getContent());
+        $this->assertSame('bar', $response->headers->get('foo'));
+        $this->assertNull($response->getLastModified());
     }
 
     public function testClosureMiddleware()
@@ -479,6 +495,7 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     * @expectedExceptionMessage
      */
     public function testRoutesDontMatchNonMatchingPathsWithLeadingOptionals()
     {
@@ -491,11 +508,12 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     * @expectedExceptionMessage
      */
     public function testRoutesDontMatchNonMatchingDomain()
     {
         $router = $this->getRouter();
-        $route = $router->get('foo/bar', ['domain' => 'api.foo.bar', function () {
+        $router->get('foo/bar', ['domain' => 'api.foo.bar', function () {
             return 'hello';
         }]);
         $this->assertEquals('hello', $router->dispatch(Request::create('http://api.baz.boom/foo/bar', 'GET'))->getContent());
@@ -504,7 +522,7 @@ class RoutingRouteTest extends TestCase
     public function testRouteDomainRegistration()
     {
         $router = $this->getRouter();
-        $route = $router->get('/foo/bar')->domain('api.foo.bar')->uses(function () {
+        $router->get('/foo/bar')->domain('api.foo.bar')->uses(function () {
             return 'hello';
         });
         $this->assertEquals('hello', $router->dispatch(Request::create('http://api.foo.bar/foo/bar', 'GET'))->getContent());
@@ -731,6 +749,7 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @expectedExceptionMessage No query results for model [Illuminate\Tests\Routing\RouteModelBindingNullStub].
      */
     public function testModelBindingWithNullReturn()
     {
@@ -985,7 +1004,8 @@ class RoutingRouteTest extends TestCase
     }
 
     /**
-     * @expectedException UnexpectedValueException
+     * @expectedException \UnexpectedValueException
+     * @expectedExceptionMessage Invalid route action: [Illuminate\Tests\Routing\RouteTestControllerStub].
      */
     public function testInvalidActionException()
     {
@@ -1294,6 +1314,7 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @expectedExceptionMessage
      */
     public function testImplicitBindingsWithOptionalParameterWithNonExistingKeyInUri()
     {
@@ -1363,6 +1384,37 @@ class RoutingRouteTest extends TestCase
         $response = $router->dispatch(Request::create('foo/bar', 'GET'));
         $this->assertNotInstanceOf(\Illuminate\Http\Response::class, $response);
         $this->assertInstanceOf(\Illuminate\Http\JsonResponse::class, $response);
+    }
+
+    public function testRouteRedirect()
+    {
+        $router = $this->getRouter();
+        $router->get('contact_us', function () {
+            throw new \Exception('Route should not be reachable.');
+        });
+        $router->redirect('contact_us', 'contact', 302);
+
+        $response = $router->dispatch(Request::create('contact_us', 'GET'));
+        $this->assertTrue($response->isRedirect('contact'));
+        $this->assertEquals(302, $response->getStatusCode());
+    }
+
+    public function testRouteView()
+    {
+        $container = new Container;
+        $factory = m::mock('Illuminate\View\Factory');
+        $factory->shouldReceive('make')->once()->with('pages.contact', ['foo' => 'bar'])->andReturn('Contact us');
+        $router = new Router(new Dispatcher, $container);
+        $container->bind(ViewFactory::class, function () use ($factory) {
+            return $factory;
+        });
+        $container->singleton(Registrar::class, function () use ($router) {
+            return $router;
+        });
+
+        $router->view('contact', 'pages.contact', ['foo' => 'bar']);
+
+        $this->assertEquals('Contact us', $router->dispatch(Request::create('contact', 'GET'))->getContent());
     }
 
     protected function getRouter()

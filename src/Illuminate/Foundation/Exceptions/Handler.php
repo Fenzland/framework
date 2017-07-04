@@ -97,7 +97,10 @@ class Handler implements ExceptionHandlerContract
             throw $e; // throw the original exception
         }
 
-        $logger->error($e, $this->context());
+        $logger->error(
+            $e->getMessage(),
+            array_merge($this->context(), ['exception' => $e]
+        ));
     }
 
     /**

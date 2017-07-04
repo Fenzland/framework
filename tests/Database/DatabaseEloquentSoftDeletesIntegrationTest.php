@@ -2,7 +2,7 @@
 
 namespace Illuminate\Tests\Database;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Connection;
 use Illuminate\Pagination\Paginator;
@@ -563,7 +563,8 @@ class DatabaseEloquentSoftDeletesIntegrationTest extends TestCase
     }
 
     /**
-     * @expectedException BadMethodCallException
+     * @expectedException \BadMethodCallException
+     * @expectedExceptionMessage Call to undefined method Illuminate\Database\Query\Builder::thisMethodDoesNotExist()
      */
     public function testMorphToWithBadMethodCall()
     {

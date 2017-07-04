@@ -329,8 +329,8 @@ class SupportHelpersTest extends TestCase
 
     public function testObjectGet()
     {
-        $class = new StdClass;
-        $class->name = new StdClass;
+        $class = new stdClass;
+        $class->name = new stdClass;
         $class->name->first = 'Taylor';
 
         $this->assertEquals('Taylor', object_get($class, 'name.first'));
@@ -721,7 +721,7 @@ class SupportHelpersTest extends TestCase
     }
 
     /**
-     * @expectedException RuntimeException
+     * @expectedException \RuntimeException
      */
     public function testThrow()
     {
@@ -729,7 +729,7 @@ class SupportHelpersTest extends TestCase
     }
 
     /**
-     * @expectedException RuntimeException
+     * @expectedException \RuntimeException
      * @expectedExceptionMessage Test Message
      */
     public function testThrowWithString()

@@ -156,6 +156,14 @@ class Container implements ArrayAccess, ContainerContract
     }
 
     /**
+     *  {@inheritdoc}
+     */
+    public function has($id)
+    {
+        return $this->bound($id);
+    }
+
+    /**
      * Determine if the given abstract type has been resolved.
      *
      * @param  string  $abstract
@@ -576,6 +584,18 @@ class Container implements ArrayAccess, ContainerContract
     public function make($abstract, array $parameters = [])
     {
         return $this->resolve($abstract, $parameters);
+    }
+
+    /**
+     *  {@inheritdoc}
+     */
+    public function get($id)
+    {
+        if ($this->has($id)) {
+            return $this->resolve($id);
+        }
+
+        throw new EntryNotFoundException;
     }
 
     /**

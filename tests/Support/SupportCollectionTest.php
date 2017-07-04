@@ -307,6 +307,30 @@ class SupportCollectionTest extends TestCase
         })->all());
     }
 
+    public function testHigherOrderFilter()
+    {
+        $c = new Collection([
+            new class {
+                public $name = 'Alex';
+
+                public function active()
+                {
+                    return true;
+                }
+            },
+            new class {
+                public $name = 'John';
+
+                public function active()
+                {
+                    return false;
+                }
+            },
+        ]);
+
+        $this->assertCount(1, $c->filter->active());
+    }
+
     public function testWhere()
     {
         $c = new Collection([['v' => 1], ['v' => 2], ['v' => 3], ['v' => '3'], ['v' => 4]]);
@@ -661,7 +685,7 @@ class SupportCollectionTest extends TestCase
 
     public function testCollapse()
     {
-        $data = new Collection([[$object1 = new StdClass], [$object2 = new StdClass]]);
+        $data = new Collection([[$object1 = new stdClass], [$object2 = new stdClass]]);
         $this->assertEquals([$object1, $object2], $data->collapse()->all());
     }
 
@@ -917,7 +941,7 @@ class SupportCollectionTest extends TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \InvalidArgumentException
      */
     public function testRandomThrowsAnErrorWhenRequestingMoreItemsThanAreAvailable()
     {
@@ -1803,7 +1827,7 @@ class SupportCollectionTest extends TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \InvalidArgumentException
      */
     public function testRandomThrowsAnExceptionUsingAmountBiggerThanCollectionSize()
     {
@@ -2114,6 +2138,38 @@ class SupportCollectionTest extends TestCase
 
         $collection->when(false, function ($collection) {
             return $collection->push('adam');
+        }, function ($collection) {
+            return $collection->push('taylor');
+        });
+
+        $this->assertSame(['michael', 'tom', 'taylor'], $collection->toArray());
+    }
+
+    public function testUnless()
+    {
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->unless(false, function ($collection) {
+            return $collection->push('caleb');
+        });
+
+        $this->assertSame(['michael', 'tom', 'caleb'], $collection->toArray());
+
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->unless(true, function ($collection) {
+            return $collection->push('caleb');
+        });
+
+        $this->assertSame(['michael', 'tom'], $collection->toArray());
+    }
+
+    public function testUnlessDefault()
+    {
+        $collection = new Collection(['michael', 'tom']);
+
+        $collection->unless(true, function ($collection) {
+            return $collection->push('caleb');
         }, function ($collection) {
             return $collection->push('taylor');
         });

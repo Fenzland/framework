@@ -4,8 +4,8 @@ namespace Illuminate\Tests\Validation;
 
 use DateTime;
 use Mockery as m;
-use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Validation\Validator;
 use Illuminate\Validation\Rules\Exists;
@@ -66,6 +66,7 @@ class ValidationValidatorTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Validation\ValidationException
+     * @expectedExceptionMessage The given data failed to pass validation.
      */
     public function testValidateThrowsOnFail()
     {
@@ -242,7 +243,7 @@ class ValidationValidatorTest extends TestCase
         $v = new Validator($trans, [], ['name' => 'required']);
         $v->setContainer($container = m::mock('Illuminate\Container\Container'));
         $v->addReplacer('required', 'Foo@bar');
-        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('StdClass'));
+        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('stdClass'));
         $foo->shouldReceive('bar')->once()->andReturn('replaced!');
         $v->passes();
         $v->messages()->setFormat(':message');
@@ -2552,7 +2553,7 @@ class ValidationValidatorTest extends TestCase
         $v = new Validator($trans, ['name' => 'taylor'], ['name' => 'foo']);
         $v->setContainer($container = m::mock('Illuminate\Container\Container'));
         $v->addExtension('foo', 'Foo@bar');
-        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('StdClass'));
+        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('stdClass'));
         $foo->shouldReceive('bar')->once()->andReturn(false);
         $this->assertFalse($v->passes());
         $v->messages()->setFormat(':message');
@@ -2566,7 +2567,7 @@ class ValidationValidatorTest extends TestCase
         $v = new Validator($trans, ['name' => 'taylor'], ['name' => 'foo']);
         $v->setContainer($container = m::mock('Illuminate\Container\Container'));
         $v->addExtension('foo', 'Foo');
-        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('StdClass'));
+        $container->shouldReceive('make')->once()->with('Foo')->andReturn($foo = m::mock('stdClass'));
         $foo->shouldReceive('validate')->once()->andReturn(false);
         $this->assertFalse($v->passes());
         $v->messages()->setFormat(':message');
@@ -2599,7 +2600,8 @@ class ValidationValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Validation rule required_if requires at least 2 parameters.
      */
     public function testExceptionThrownOnIncorrectParameterCount()
     {
