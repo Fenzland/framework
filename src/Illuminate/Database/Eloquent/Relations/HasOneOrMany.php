@@ -200,10 +200,10 @@ abstract class HasOneOrMany extends Relation
      * @param  array  $attributes
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function firstOrNew(array $attributes)
+    public function firstOrNew(array $attributes, array $values = [])
     {
         if (is_null($instance = $this->where($attributes)->first())) {
-            $instance = $this->related->newInstance($attributes);
+            $instance = $this->related->newInstance($attributes + $values);
 
             $instance->setAttribute($this->getForeignKeyName(), $this->getParentKey());
         }
@@ -217,10 +217,10 @@ abstract class HasOneOrMany extends Relation
      * @param  array  $attributes
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function firstOrCreate(array $attributes)
+    public function firstOrCreate(array $attributes, array $values = [])
     {
         if (is_null($instance = $this->where($attributes)->first())) {
-            $instance = $this->create($attributes);
+            $instance = $this->create($attributes + $values);
         }
 
         return $instance;
