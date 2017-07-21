@@ -5,6 +5,7 @@ namespace Illuminate\Database\Eloquent;
 use Exception;
 use ArrayAccess;
 use JsonSerializable;
+use BadMethodCallException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Support\Jsonable;
@@ -15,6 +16,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
 {
     use Concerns\HasAttributes,
@@ -555,7 +559,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 
         $this->syncOriginal();
 
-        if (Arr::get($options, 'touch', true)) {
+        if ($options['touch'] ?? true) {
             $this->touchOwners();
         }
     }
@@ -591,6 +595,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
             $this->setKeysForSaveQuery($query)->update($dirty);
 
             $this->fireModelEvent('updated', false);
+
+            $this->syncChanges();
         }
 
         return true;
@@ -616,9 +622,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     protected function getKeyForSaveQuery()
     {
-        return isset($this->original[$this->getKeyName()])
-                        ? $this->original[$this->getKeyName()]
-                        : $this->getAttribute($this->getKeyName());
+        return $this->original[$this->getKeyName()]
+                        ?? $this->getAttribute($this->getKeyName());
     }
 
     /**
@@ -883,7 +888,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
     public function newPivot(Model $parent, array $attributes, $table, $exists, $using = null)
     {
         return $using ? $using::fromRawAttributes($parent, $attributes, $table, $exists)
-                      : new Pivot($parent, $attributes, $table, $exists);
+                      : Pivot::fromAttributes($parent, $attributes, $table, $exists);
     }
 
     /**
@@ -1365,7 +1370,13 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
             return $this->$method(...$parameters);
         }
 
-        return $this->newQuery()->$method(...$parameters);
+        try {
+            return $this->newQuery()->$method(...$parameters);
+        } catch (BadMethodCallException $e) {
+            throw new BadMethodCallException(
+                sprintf('Call to undefined method %s::%s()', get_class($this), $method)
+            );
+        }
     }
 
     /**

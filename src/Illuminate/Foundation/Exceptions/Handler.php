@@ -41,7 +41,7 @@ class Handler implements ExceptionHandlerContract
     protected $container;
 
     /**
-     * A list of the exception types that should not be reported.
+     * A list of the exception types that are not reported.
      *
      * @var array
      */
@@ -60,6 +60,16 @@ class Handler implements ExceptionHandlerContract
         \Illuminate\Database\Eloquent\ModelNotFoundException::class,
         \Illuminate\Session\TokenMismatchException::class,
         \Illuminate\Validation\ValidationException::class,
+    ];
+
+    /**
+     * A list of the inputs that are never flashed for validation exceptions.
+     *
+     * @var array
+     */
+    protected $dontFlash = [
+        'password',
+        'password_confirmation',
     ];
 
     /**
@@ -196,6 +206,20 @@ class Handler implements ExceptionHandlerContract
     }
 
     /**
+     * Convert an authentication exception into a response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @return \Illuminate\Http\Response
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        return $request->expectsJson()
+                    ? response()->json(['message' => 'Unauthenticated.'], 401)
+                    : redirect()->guest(route('login'));
+    }
+
+    /**
      * Create a response object from the given validation exception.
      *
      * @param  \Illuminate\Validation\ValidationException  $e
@@ -208,17 +232,43 @@ class Handler implements ExceptionHandlerContract
             return $e->response;
         }
 
-        $errors = $e->validator->errors()->getMessages();
+        return $request->expectsJson()
+                    ? $this->invalidJson($request, $e)
+                    : $this->invalid($request, $e);
+    }
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => $e->getMessage(), 'errors' => $errors,
-            ], 422);
-        }
+    /**
+     * Convert a validation exception into a response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Validation\ValidationException  $exception
+     * @return \Illuminate\Http\Response
+     */
+    protected function invalid($request, ValidationException $exception)
+    {
+        $url = $exception->redirectTo ?? url()->previous();
 
-        return redirect()->back()->withInput(
-            $request->input()
-        )->withErrors($errors);
+        return redirect($url)
+                ->withInput($request->except($this->dontFlash))
+                ->withErrors(
+                    $exception->errors(),
+                    $exception->errorBag
+                );
+    }
+
+    /**
+     * Convert a validation exception into a JSON response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Validation\ValidationException  $exception
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function invalidJson($request, ValidationException $exception)
+    {
+        return response()->json([
+            'message' => $exception->getMessage(),
+            'errors' => $exception->errors(),
+        ], $exception->status);
     }
 
     /**

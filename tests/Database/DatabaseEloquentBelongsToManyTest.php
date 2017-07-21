@@ -548,21 +548,6 @@ class DatabaseEloquentBelongsToManyTest extends TestCase
         $this->assertEquals(['attached' => [4], 'detached' => [1], 'updated' => []], $relation->sync([2, 3 => ['baz' => 'qux'], 4 => ['foo' => 'bar']]));
     }
 
-    public function testTouchMethodSyncsTimestamps()
-    {
-        $relation = $this->getRelation();
-        $relation->getRelated()->shouldReceive('getUpdatedAtColumn')->andReturn('updated_at');
-        $relation->getRelated()->shouldReceive('freshTimestampString')->andReturn('100');
-        $relation->getRelated()->shouldReceive('getQualifiedKeyName')->andReturn('table.id');
-        $relation->getQuery()->shouldReceive('select')->once()->with('table.id')->andReturn($relation->getQuery());
-        $relation->getQuery()->shouldReceive('pluck')->once()->with('id')->andReturn([1, 2, 3]);
-        $relation->getRelated()->shouldReceive('newQuery')->once()->andReturn($query = m::mock('stdClass'));
-        $query->shouldReceive('whereIn')->once()->with('id', [1, 2, 3])->andReturn($query);
-        $query->shouldReceive('update')->once()->with(['updated_at' => '100']);
-
-        $relation->touch();
-    }
-
     /**
      * @dataProvider toggleMethodListProvider
      */
@@ -721,9 +706,10 @@ class DatabaseEloquentBelongsToManyTest extends TestCase
         $related->shouldReceive('getTable')->andReturn('roles');
         $related->shouldReceive('getKeyName')->andReturn('id');
         $related->shouldReceive('newPivot')->andReturnUsing(function () {
-            $reflector = new ReflectionClass('Illuminate\Database\Eloquent\Relations\Pivot');
+            $model = new \Illuminate\Database\Eloquent\Relations\Pivot();
+            $reflector = new ReflectionClass($model);
 
-            return $reflector->newInstanceArgs(func_get_args());
+            return $reflector->getMethod('fromAttributes')->invokeArgs($model, func_get_args());
         });
 
         $builder->shouldReceive('join')->once()->with('user_role', 'roles.id', '=', 'user_role.role_id');

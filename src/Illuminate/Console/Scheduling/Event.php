@@ -65,6 +65,13 @@ class Event
     public $withoutOverlapping = false;
 
     /**
+     * The amount of time the mutex should be valid.
+     *
+     * @var int
+     */
+    public $expiresAt = 1440;
+
+    /**
      * Indicates if the command should run in background.
      *
      * @var bool
@@ -525,12 +532,14 @@ class Event
     /**
      * Register a callback to further filter the schedule.
      *
-     * @param  \Closure  $callback
+     * @param  \Closure|bool  $callback
      * @return $this
      */
-    public function when(Closure $callback)
+    public function when($callback)
     {
-        $this->filters[] = $callback;
+        $this->filters[] = is_callable($callback) ? $callback : function () use ($callback) {
+            return $callback;
+        };
 
         return $this;
     }
@@ -538,12 +547,14 @@ class Event
     /**
      * Register a callback to further filter the schedule.
      *
-     * @param  \Closure  $callback
+     * @param  \Closure|bool  $callback
      * @return $this
      */
-    public function skip(Closure $callback)
+    public function skip($callback)
     {
-        $this->rejects[] = $callback;
+        $this->rejects[] = is_callable($callback) ? $callback : function () use ($callback) {
+            return $callback;
+        };
 
         return $this;
     }

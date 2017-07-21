@@ -2,7 +2,6 @@
 
 namespace Illuminate\Database\Eloquent\Relations;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -709,11 +708,7 @@ class BelongsToMany extends Relation
      */
     public function allRelatedIds()
     {
-        $related = $this->getRelated();
-
-        return $this->getQuery()->select(
-            $related->getQualifiedKeyName()
-        )->pluck($related->getKeyName());
+        return $this->newPivotQuery()->pluck($this->relatedPivotKey);
     }
 
     /**
@@ -743,7 +738,7 @@ class BelongsToMany extends Relation
     public function saveMany($models, array $pivotAttributes = [])
     {
         foreach ($models as $key => $model) {
-            $this->save($model, (array) Arr::get($pivotAttributes, $key), false);
+            $this->save($model, (array) ($pivotAttributes[$key] ?? []), false);
         }
 
         $this->touchIfTouching();
@@ -785,7 +780,7 @@ class BelongsToMany extends Relation
         $instances = [];
 
         foreach ($records as $key => $record) {
-            $instances[] = $this->create($record, (array) Arr::get($joinings, $key), false);
+            $instances[] = $this->create($record, (array) ($joinings[$key] ?? []), false);
         }
 
         $this->touchIfTouching();

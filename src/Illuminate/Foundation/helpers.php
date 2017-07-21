@@ -228,7 +228,7 @@ if (! function_exists('cache')) {
         }
 
         if (is_string($arguments[0])) {
-            return app('cache')->get($arguments[0], isset($arguments[1]) ? $arguments[1] : null);
+            return app('cache')->get($arguments[0], $arguments[1] ?? null);
         }
 
         if (! is_array($arguments[0])) {
@@ -476,7 +476,7 @@ if (! function_exists('factory')) {
         $arguments = func_get_args();
 
         if (isset($arguments[1]) && is_string($arguments[1])) {
-            return $factory->of($arguments[0], $arguments[1])->times(isset($arguments[2]) ? $arguments[2] : null);
+            return $factory->of($arguments[0], $arguments[1])->times($arguments[2] ?? null);
         } elseif (isset($arguments[1])) {
             return $factory->of($arguments[0])->times($arguments[1]);
         } else {
@@ -552,32 +552,30 @@ if (! function_exists('mix')) {
             $manifestDirectory = "/{$manifestDirectory}";
         }
 
-        $manifestKey = $manifestDirectory ? $manifestDirectory : '/';
-
         if (file_exists(public_path($manifestDirectory.'/hot'))) {
             return new HtmlString("//localhost:8080{$path}");
         }
 
-        if (in_array($manifestKey, $manifests)) {
-            $manifest = $manifests[$manifestKey];
-        } else {
-            if (! file_exists($manifestPath = public_path($manifestDirectory.'/mix-manifest.json'))) {
+        $manifestPath = public_path($manifestDirectory.'/mix-manifest.json');
+
+        if (! isset($manifests[$manifestPath])) {
+            if (! file_exists($manifestPath)) {
                 throw new Exception('The Mix manifest does not exist.');
             }
 
-            $manifests[$manifestKey] = $manifest = json_decode(
-                file_get_contents($manifestPath), true
-            );
+            $manifests[$manifestPath] = json_decode(file_get_contents($manifestPath), true);
         }
 
-        if (! array_key_exists($path, $manifest)) {
+        $manifest = $manifests[$manifestPath];
+
+        if (! isset($manifest[$path])) {
             throw new Exception(
                 "Unable to locate Mix file: {$path}. Please check your ".
                 'webpack.mix.js output paths and try again.'
             );
         }
 
-        return new HtmlString($manifestDirectory.$manifest[$path]);
+        return new HtmlString(asset($manifestDirectory.$manifest[$path]));
     }
 }
 
@@ -800,7 +798,7 @@ if (! function_exists('trans')) {
      * @param  string  $id
      * @param  array   $replace
      * @param  string  $locale
-     * @return \Illuminate\Contracts\Translation\Translator|string
+     * @return \Illuminate\Contracts\Translation\Translator|string|array|null
      */
     function trans($id = null, $replace = [], $locale = null)
     {
