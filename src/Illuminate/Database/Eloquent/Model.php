@@ -18,6 +18,7 @@ use Illuminate\Database\ConnectionResolverInterface as Resolver;
 
 /**
  * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin \Illuminate\Database\Query\Builder
  */
 abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
 {
@@ -1001,6 +1002,17 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
                $this->getKey() === $model->getKey() &&
                $this->getTable() === $model->getTable() &&
                $this->getConnectionName() === $model->getConnectionName();
+    }
+
+    /**
+     * Determine if two models are not the same.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    public function isNot(Model $model)
+    {
+        return ! $this->is($model);
     }
 
     /**

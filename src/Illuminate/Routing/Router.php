@@ -650,7 +650,7 @@ class Router implements RegistrarContract, BindingRegistrar
     public static function prepareResponse($request, $response)
     {
         if ($response instanceof Responsable) {
-            $response = $response->toResponse();
+            $response = $response->toResponse($request);
         }
 
         if ($response instanceof PsrResponseInterface) {
@@ -1021,23 +1021,20 @@ class Router implements RegistrarContract, BindingRegistrar
      */
     public function currentRouteAction()
     {
-        if (! $this->current()) {
-            return;
+        if ($this->current()) {
+            return $this->current()->getAction()['controller'] ?? null;
         }
-
-        $action = $this->current()->getAction();
-
-        return $action['controller'] ?? null;
     }
 
     /**
      * Alias for the "currentRouteUses" method.
      *
+     * @param  array  ...$patterns
      * @return bool
      */
-    public function uses()
+    public function uses(...$patterns)
     {
-        foreach (func_get_args() as $pattern) {
+        foreach ($patterns as $pattern) {
             if (Str::is($pattern, $this->currentRouteAction())) {
                 return true;
             }

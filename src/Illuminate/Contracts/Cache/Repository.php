@@ -3,8 +3,9 @@
 namespace Illuminate\Contracts\Cache;
 
 use Closure;
+use Psr\SimpleCache\CacheInterface;
 
-interface Repository
+interface Repository extends CacheInterface
 {
     /**
      * Determine if an item exists in the cache.
@@ -114,4 +115,11 @@ interface Repository
      * @return bool
      */
     public function forget($key);
+
+    /**
+     * Get the cache store implementation.
+     *
+     * @return \Illuminate\Contracts\Cache\Store
+     */
+    public function getStore();
 }

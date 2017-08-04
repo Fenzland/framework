@@ -917,7 +917,11 @@ trait ValidatesAttributes
             return false;
         }
 
-        return $value->getPath() != '' && in_array($value->guessExtension(), $parameters);
+        if ($this->shouldBlockPhpUpload($value, $parameters)) {
+            return false;
+        }
+
+        return $value->getPath() !== '' && in_array($value->guessExtension(), $parameters);
     }
 
     /**
@@ -934,9 +938,31 @@ trait ValidatesAttributes
             return false;
         }
 
-        return $value->getPath() != '' &&
+        if ($this->shouldBlockPhpUpload($value, $parameters)) {
+            return false;
+        }
+
+        return $value->getPath() !== '' &&
                 (in_array($value->getMimeType(), $parameters) ||
                  in_array(explode('/', $value->getMimeType())[0].'/*', $parameters));
+    }
+
+    /**
+     * Check if PHP uploads are explicitly allowed.
+     *
+     * @param  mixed  $value
+     * @param  array  $parameters
+     * @return bool
+     */
+    protected function shouldBlockPhpUpload($value, $parameters)
+    {
+        if (in_array('php', $parameters)) {
+            return false;
+        }
+
+        return ($value instanceof UploadedFile)
+           ? strtolower($value->getClientOriginalExtension()) === 'php'
+           : strtolower($value->getExtension()) === 'php';
     }
 
     /**
@@ -1038,7 +1064,7 @@ trait ValidatesAttributes
         } elseif ((is_array($value) || $value instanceof Countable) && count($value) < 1) {
             return false;
         } elseif ($value instanceof File) {
-            return (string) $value->getPath() != '';
+            return (string) $value->getPath() !== '';
         }
 
         return true;

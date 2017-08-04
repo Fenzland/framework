@@ -208,6 +208,15 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->secure());
     }
 
+    public function testUserAgentMethod()
+    {
+        $request = Request::create('/', 'GET', [], [], [], [
+            'HTTP_USER_AGENT' => 'Laravel',
+        ]);
+
+        $this->assertEquals('Laravel', $request->userAgent());
+    }
+
     public function testHasMethod()
     {
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'age' => '', 'city' => null]);
@@ -323,6 +332,15 @@ class HttpRequestTest extends TestCase
         $this->assertEquals('Taylor', $request->query('name'));
         $this->assertEquals('Bob', $request->query('foo', 'Bob'));
         $all = $request->query(null);
+        $this->assertEquals('Taylor', $all['name']);
+    }
+
+    public function testPostMethod()
+    {
+        $request = Request::create('/', 'POST', ['name' => 'Taylor']);
+        $this->assertEquals('Taylor', $request->post('name'));
+        $this->assertEquals('Bob', $request->post('foo', 'Bob'));
+        $all = $request->post(null);
         $this->assertEquals('Taylor', $all['name']);
     }
 

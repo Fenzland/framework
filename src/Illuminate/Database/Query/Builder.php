@@ -536,7 +536,7 @@ class Builder
         // where null clause to the query. So, we will allow a short-cut here to
         // that method for convenience so the developer doesn't have to check.
         if (is_null($value)) {
-            return $this->whereNull($column, $boolean, $operator != '=');
+            return $this->whereNull($column, $boolean, $operator !== '=');
         }
 
         // If the column is making a JSON reference we'll check to see if the value
@@ -715,10 +715,10 @@ class Builder
      * Add a raw or where clause to the query.
      *
      * @param  string  $sql
-     * @param  array   $bindings
+     * @param  mixed   $bindings
      * @return \Illuminate\Database\Query\Builder|static
      */
-    public function orWhereRaw($sql, array $bindings = [])
+    public function orWhereRaw($sql, $bindings = [])
     {
         return $this->whereRaw($sql, $bindings, 'or');
     }
@@ -1265,7 +1265,7 @@ class Builder
             // If the segment is not a boolean connector, we can assume it is a column's name
             // and we will add it to the query as a new constraint as a where clause, then
             // we can keep iterating through the dynamic method string's segments again.
-            if ($segment != 'And' && $segment != 'Or') {
+            if ($segment !== 'And' && $segment !== 'Or') {
                 $this->addDynamic($segment, $connector, $parameters, $index);
 
                 $index++;
@@ -1562,7 +1562,7 @@ class Builder
     }
 
     /**
-     * Get an array orders with all orders for an given column removed.
+     * Get an array with all orders with a given column removed.
      *
      * @param  string  $column
      * @return array
@@ -1571,7 +1571,8 @@ class Builder
     {
         return Collection::make($this->orders)
                     ->reject(function ($order) use ($column) {
-                        return $order['column'] === $column;
+                        return isset($order['column'])
+                               ? $order['column'] === $column : false;
                     })->values()->all();
     }
 

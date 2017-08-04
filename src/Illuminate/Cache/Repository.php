@@ -4,7 +4,6 @@ namespace Illuminate\Cache;
 
 use Closure;
 use ArrayAccess;
-use DateInterval;
 use DateTimeInterface;
 use BadMethodCallException;
 use Illuminate\Support\Carbon;
@@ -14,11 +13,16 @@ use Illuminate\Cache\Events\KeyWritten;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Cache\Events\KeyForgotten;
+use Illuminate\Support\InteractsWithTime;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Cache\Repository as CacheContract;
 
+/**
+ * @mixin \Illuminate\Contracts\Cache\Store
+ */
 class Repository implements CacheContract, ArrayAccess
 {
+    use InteractsWithTime;
     use Macroable {
         __call as macroCall;
     }
@@ -115,6 +119,24 @@ class Repository implements CacheContract, ArrayAccess
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getMultiple($keys, $default = null)
+    {
+        if (is_null($default)) {
+            return $this->many($keys);
+        }
+
+        foreach ($keys as $key) {
+            if (! isset($default[$key])) {
+                $default[$key] = null;
+            }
+        }
+
+        return $this->many($default);
+    }
+
+    /**
      * Handle a result for the "many" method.
      *
      * @param  array  $keys
@@ -181,6 +203,14 @@ class Repository implements CacheContract, ArrayAccess
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function set($key, $value, $ttl = null)
+    {
+        $this->put($key, $value, $ttl);
+    }
+
+    /**
      * Store multiple items in the cache for a given number of minutes.
      *
      * @param  array  $values
@@ -196,6 +226,14 @@ class Repository implements CacheContract, ArrayAccess
                 $this->event(new KeyWritten($key, $value, $minutes));
             }
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setMultiple($values, $ttl = null)
+    {
+        $this->putMany($values, $ttl);
     }
 
     /**
@@ -344,6 +382,34 @@ class Repository implements CacheContract, ArrayAccess
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function delete($key)
+    {
+        return $this->forget($key);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteMultiple($keys)
+    {
+        foreach ($keys as $key) {
+            $this->forget($key);
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function clear()
+    {
+        return $this->store->flush();
+    }
+
+    /**
      * Begin executing a new tags operation if the store supports it.
      *
      * @param  array|mixed  $names
@@ -487,9 +553,7 @@ class Repository implements CacheContract, ArrayAccess
      */
     protected function getMinutes($duration)
     {
-        if ($duration instanceof DateInterval) {
-            $duration = Carbon::now()->add($duration);
-        }
+        $duration = $this->parseDateInterval($duration);
 
         if ($duration instanceof DateTimeInterface) {
             $duration = Carbon::now()->diffInSeconds(Carbon::createFromTimestamp($duration->getTimestamp()), false) / 60;

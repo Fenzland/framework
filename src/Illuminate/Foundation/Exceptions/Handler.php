@@ -168,7 +168,7 @@ class Handler implements ExceptionHandlerContract
         if (method_exists($e, 'render') && $response = $e->render($request)) {
             return Router::prepareResponse($request, $response);
         } elseif ($e instanceof Responsable) {
-            return $e->toResponse();
+            return $e->toResponse($request);
         }
 
         $e = $this->prepareException($e);
@@ -308,7 +308,7 @@ class Handler implements ExceptionHandlerContract
         $statusCode = $this->isHttpException($e) ? $e->getStatusCode() : 500;
 
         try {
-            $content = config('app.debug')
+            $content = config('app.debug') && class_exists(Whoops::class)
                     ? $this->renderExceptionWithWhoops($e)
                     : $this->renderExceptionWithSymfony($e, config('app.debug'));
         } catch (Exception $e) {
