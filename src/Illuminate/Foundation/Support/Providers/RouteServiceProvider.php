@@ -6,6 +6,9 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
+/**
+ * @mixin \Illuminate\Routing\Router
+ */
 class RouteServiceProvider extends ServiceProvider
 {
     /**
@@ -31,6 +34,7 @@ class RouteServiceProvider extends ServiceProvider
 
             $this->app->booted(function () {
                 $this->app['router']->getRoutes()->refreshNameLookups();
+                $this->app['router']->getRoutes()->refreshActionLookups();
             });
         }
     }

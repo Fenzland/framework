@@ -5,33 +5,35 @@ namespace Illuminate\Console\Scheduling;
 use Illuminate\Console\Application;
 use Illuminate\Container\Container;
 use Symfony\Component\Process\ProcessUtils;
-use Illuminate\Contracts\Cache\Repository as Cache;
 
 class Schedule
 {
     /**
-     * The cache store implementation.
-     *
-     * @var \Illuminate\Contracts\Cache\Repository
-     */
-    protected $cache;
-
-    /**
      * All of the events on the schedule.
      *
-     * @var array
+     * @var \Illuminate\Console\Scheduling\Event[]
      */
     protected $events = [];
 
     /**
-     * Create a new event instance.
+     * The mutex implementation.
      *
-     * @param  \Illuminate\Contracts\Cache\Repository  $cache
+     * @var \Illuminate\Console\Scheduling\Mutex
+     */
+    protected $mutex;
+
+    /**
+     * Create a new schedule instance.
+     *
      * @return void
      */
-    public function __construct(Cache $cache)
+    public function __construct()
     {
-        $this->cache = $cache;
+        $container = Container::getInstance();
+
+        $this->mutex = $container->bound(Mutex::class)
+                                ? $container->make(Mutex::class)
+                                : $container->make(CacheMutex::class);
     }
 
     /**
@@ -39,11 +41,13 @@ class Schedule
      *
      * @param  string|callable  $callback
      * @param  array   $parameters
-     * @return \Illuminate\Console\Scheduling\Event
+     * @return \Illuminate\Console\Scheduling\CallbackEvent
      */
     public function call($callback, array $parameters = [])
     {
-        $this->events[] = $event = new CallbackEvent($this->cache, $callback, $parameters);
+        $this->events[] = $event = new CallbackEvent(
+            $this->mutex, $callback, $parameters
+        );
 
         return $event;
     }
@@ -70,7 +74,7 @@ class Schedule
      * Add a new job callback event to the schedule.
      *
      * @param  object|string  $job
-     * @return \Illuminate\Console\Scheduling\Event
+     * @return \Illuminate\Console\Scheduling\CallbackEvent
      */
     public function job($job)
     {
@@ -92,7 +96,7 @@ class Schedule
             $command .= ' '.$this->compileParameters($parameters);
         }
 
-        $this->events[] = $event = new Event($this->cache, $command);
+        $this->events[] = $event = new Event($this->mutex, $command);
 
         return $event;
     }
@@ -132,7 +136,7 @@ class Schedule
     /**
      * Get all of the events on the schedule.
      *
-     * @return array
+     * @return \Illuminate\Console\Scheduling\Event[]
      */
     public function events()
     {

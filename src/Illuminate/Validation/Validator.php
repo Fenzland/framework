@@ -170,6 +170,20 @@ class Validator implements ValidatorContract
     ];
 
     /**
+     * The size related validation rules.
+     *
+     * @var array
+     */
+    protected $sizeRules = ['Size', 'Between', 'Min', 'Max'];
+
+    /**
+     * The numeric related validation rules.
+     *
+     * @var array
+     */
+    protected $numericRules = ['Numeric', 'Integer'];
+
+    /**
      * Create a new Validator instance.
      *
      * @param  \Illuminate\Contracts\Translation\Translator  $translator
@@ -813,6 +827,21 @@ class Validator implements ValidatorContract
     }
 
     /**
+     * Register an array of custom implicit validator extensions.
+     *
+     * @param  array  $extensions
+     * @return void
+     */
+    public function addDependentExtensions(array $extensions)
+    {
+        $this->addExtensions($extensions);
+
+        foreach ($extensions as $rule => $extension) {
+            $this->dependentRules[] = Str::studly($rule);
+        }
+    }
+
+    /**
      * Register a custom validator extension.
      *
      * @param  string  $rule
@@ -836,6 +865,20 @@ class Validator implements ValidatorContract
         $this->addExtension($rule, $extension);
 
         $this->implicitRules[] = Str::studly($rule);
+    }
+
+    /**
+     * Register a custom dependent validator extension.
+     *
+     * @param  string   $rule
+     * @param  \Closure|string  $extension
+     * @return void
+     */
+    public function addDependentExtension($rule, $extension)
+    {
+        $this->addExtension($rule, $extension);
+
+        $this->dependentRules[] = Str::studly($rule);
     }
 
     /**

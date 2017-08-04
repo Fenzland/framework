@@ -147,6 +147,23 @@ class DatabaseQueryBuilderTest extends TestCase
         $this->assertEquals('select * from "users" where "email" = ?', $builder->toSql());
     }
 
+    public function testWhenCallbackWithReturn()
+    {
+        $callback = function ($query, $condition) {
+            $this->assertTrue($condition);
+
+            return $query->where('id', '=', 1);
+        };
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->when(true, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->when(false, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "email" = ?', $builder->toSql());
+    }
+
     public function testWhenCallbackWithDefault()
     {
         $callback = function ($query, $condition) {
@@ -168,6 +185,65 @@ class DatabaseQueryBuilderTest extends TestCase
 
         $builder = $this->getBuilder();
         $builder->select('*')->from('users')->when(0, $callback, $default)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
+        $this->assertEquals([0 => 2, 1 => 'foo'], $builder->getBindings());
+    }
+
+    public function testUnlessCallback()
+    {
+        $callback = function ($query, $condition) {
+            $this->assertFalse($condition);
+
+            $query->where('id', '=', 1);
+        };
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless(false, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless(true, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "email" = ?', $builder->toSql());
+    }
+
+    public function testUnlessCallbackWithReturn()
+    {
+        $callback = function ($query, $condition) {
+            $this->assertFalse($condition);
+
+            return $query->where('id', '=', 1);
+        };
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless(false, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless(true, $callback)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "email" = ?', $builder->toSql());
+    }
+
+    public function testUnlessCallbackWithDefault()
+    {
+        $callback = function ($query, $condition) {
+            $this->assertEquals($condition, 0);
+
+            $query->where('id', '=', 1);
+        };
+
+        $default = function ($query, $condition) {
+            $this->assertEquals($condition, 'truthy');
+
+            $query->where('id', '=', 2);
+        };
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless(0, $callback, $default)->where('email', 'foo');
+        $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
+        $this->assertEquals([0 => 1, 1 => 'foo'], $builder->getBindings());
+
+        $builder = $this->getBuilder();
+        $builder->select('*')->from('users')->unless('truthy', $callback, $default)->where('email', 'foo');
         $this->assertEquals('select * from "users" where "id" = ? and "email" = ?', $builder->toSql());
         $this->assertEquals([0 => 2, 1 => 'foo'], $builder->getBindings());
     }
@@ -1477,6 +1553,21 @@ class DatabaseQueryBuilderTest extends TestCase
         $builder = $this->getSqlServerBuilder();
         $builder->getConnection()->shouldReceive('delete')->once()->with('delete [users] from [users] inner join [contacts] on [users].[id] = [contacts].[id] where [users].[id] = ?', [1])->andReturn(1);
         $result = $builder->from('users')->join('contacts', 'users.id', '=', 'contacts.id')->delete(1);
+        $this->assertEquals(1, $result);
+
+        $builder = $this->getPostgresBuilder();
+        $builder->getConnection()->shouldReceive('delete')->once()->with('delete from "users" USING "contacts" where "users"."email" = ? and "users"."id" = "contacts"."id"', ['foo'])->andReturn(1);
+        $result = $builder->from('users')->join('contacts', 'users.id', '=', 'contacts.id')->where('users.email', '=', 'foo')->delete();
+        $this->assertEquals(1, $result);
+
+        $builder = $this->getPostgresBuilder();
+        $builder->getConnection()->shouldReceive('delete')->once()->with('delete from "users" as "a" USING "users" as "b" where "email" = ? and "a"."id" = "b"."user_id"', ['foo'])->andReturn(1);
+        $result = $builder->from('users AS a')->join('users AS b', 'a.id', '=', 'b.user_id')->where('email', '=', 'foo')->orderBy('id')->limit(1)->delete();
+        $this->assertEquals(1, $result);
+
+        $builder = $this->getPostgresBuilder();
+        $builder->getConnection()->shouldReceive('delete')->once()->with('delete from "users" USING "contacts" where "users"."id" = ? and "users"."id" = "contacts"."id"', [1])->andReturn(1);
+        $result = $builder->from('users')->join('contacts', 'users.id', '=', 'contacts.id')->orderBy('id')->take(1)->delete(1);
         $this->assertEquals(1, $result);
     }
 

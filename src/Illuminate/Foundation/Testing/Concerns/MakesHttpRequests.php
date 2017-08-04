@@ -24,7 +24,7 @@ trait MakesHttpRequests
      * @param  array  $server
      * @return $this
      */
-    protected function withServerVariables(array $server)
+    public function withServerVariables(array $server)
     {
         $this->serverVariables = $server;
 
@@ -307,6 +307,8 @@ trait MakesHttpRequests
 
             if (is_array($value)) {
                 $files[$key] = $this->extractFilesFromDataArray($value);
+
+                $data[$key] = $value;
             }
         }
 

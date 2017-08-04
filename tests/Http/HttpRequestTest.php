@@ -157,6 +157,21 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->is('/'));
     }
 
+    public function testRouteIsMethod()
+    {
+        $request = Request::create('/foo/bar', 'GET');
+
+        $request->setRouteResolver(function () use ($request) {
+            $route = new Route('GET', '/foo/bar', ['as' => 'foo.bar']);
+            $route->bind($request);
+
+            return $route;
+        });
+
+        $this->assertTrue($request->routeIs('foo.bar'));
+        $this->assertFalse($request->routeIs('foo.foo'));
+    }
+
     public function testAjaxMethod()
     {
         $request = Request::create('/', 'GET');
@@ -188,6 +203,15 @@ class HttpRequestTest extends TestCase
         $this->assertFalse($request->secure());
         $request = Request::create('https://example.com', 'GET');
         $this->assertTrue($request->secure());
+    }
+
+    public function testUserAgentMethod()
+    {
+        $request = Request::create('/', 'GET', [], [], [], [
+            'HTTP_USER_AGENT' => 'Laravel',
+        ]);
+
+        $this->assertEquals('Laravel', $request->userAgent());
     }
 
     public function testExistsMethod()
