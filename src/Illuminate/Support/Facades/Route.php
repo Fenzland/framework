@@ -11,8 +11,11 @@ namespace Illuminate\Support\Facades;
  * @method static \Illuminate\Routing\Route options(string $uri, \Closure|array|string $action)
  * @method static \Illuminate\Routing\Route any(string $uri, \Closure|array|string $action)
  * @method static \Illuminate\Routing\Route match(array|string $methods, string $uri, \Closure|array|string $action)
+ * @method static \Illuminate\Routing\Route prefix(string  $prefix)
  * @method static void resource(string $name, string $controller, array $options = [])
+ * @method static void apiResource(string $name, string $controller, array $options = [])
  * @method static void group(array $attributes, \Closure $callback)
+ * @method static \Illuminate\Routing\Route middleware(array|string|null $middleware)
  * @method static \Illuminate\Routing\Route substituteBindings(\Illuminate\Routing\Route $route)
  * @method static void substituteImplicitBindings(\Illuminate\Routing\Route $route)
  *

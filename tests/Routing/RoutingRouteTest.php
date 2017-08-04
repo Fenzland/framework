@@ -452,6 +452,28 @@ class RoutingRouteTest extends TestCase
         $this->assertInstanceOf('Illuminate\Tests\Routing\RoutingTestTeamModel', $values[3]);
     }
 
+    public function testLeadingParamDoesntReceiveForwardSlashOnEmptyPath()
+    {
+        $router = $this->getRouter();
+        $outer_one = 'abc1234'; // a string that is not one we're testing
+        $router->get('{one?}', [
+            'uses' => function ($one = null) use (&$outer_one) {
+                $outer_one = $one;
+
+                return $one;
+            },
+            'where' => ['one' => '(.+)'],
+        ]);
+
+        $this->assertEquals('', $router->dispatch(Request::create(''))->getContent());
+        $this->assertNull($outer_one);
+        // Expects: '' ($one === null)
+        // Actual: '/' ($one === '/')
+
+        $this->assertEquals('foo', $router->dispatch(Request::create('/foo', 'GET'))->getContent());
+        $this->assertEquals('foo/bar/baz', $router->dispatch(Request::create('/foo/bar/baz', 'GET'))->getContent());
+    }
+
     /**
      * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
@@ -1183,6 +1205,17 @@ class RoutingRouteTest extends TestCase
         $this->assertFalse(isset($_SERVER['route.test.controller.except.middleware']));
     }
 
+    public function testCallableControllerRouting()
+    {
+        $router = $this->getRouter();
+
+        $router->get('foo/bar', 'Illuminate\Tests\Routing\RouteTestControllerCallableStub@bar');
+        $router->get('foo/baz', 'Illuminate\Tests\Routing\RouteTestControllerCallableStub@baz');
+
+        $this->assertEquals('bar', $router->dispatch(Request::create('foo/bar', 'GET'))->getContent());
+        $this->assertEquals('baz', $router->dispatch(Request::create('foo/baz', 'GET'))->getContent());
+    }
+
     public function testControllerMiddlewareGroups()
     {
         unset(
@@ -1301,6 +1334,14 @@ class RouteTestControllerStub extends Controller
     public function index()
     {
         return 'Hello World';
+    }
+}
+
+class RouteTestControllerCallableStub extends Controller
+{
+    public function __call($method, $arguments = [])
+    {
+        return $method;
     }
 }
 
