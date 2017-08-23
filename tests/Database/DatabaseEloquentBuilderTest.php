@@ -475,7 +475,6 @@ class DatabaseEloquentBuilderTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\RelationNotFoundException
-     * @expectedExceptionMessage Call to undefined relationship [invalid] on model [Mockery_18_Illuminate_Database_Eloquent_Model].
      */
     public function testGetRelationThrowsException()
     {
@@ -831,6 +830,49 @@ class DatabaseEloquentBuilderTest extends TestCase
         $sql = preg_replace($aliasRegex, $alias, $sql);
 
         $this->assertContains('"self_alias_hash"."id" = "self_related_stubs"."parent_id"', $sql);
+    }
+
+    public function testDoesntHave()
+    {
+        $model = new EloquentBuilderTestModelParentStub;
+
+        $builder = $model->doesntHave('foo');
+
+        $this->assertEquals('select * from "eloquent_builder_test_model_parent_stubs" where not exists (select * from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id")', $builder->toSql());
+    }
+
+    public function testOrDoesntHave()
+    {
+        $model = new EloquentBuilderTestModelParentStub;
+
+        $builder = $model->where('bar', 'baz')->orDoesntHave('foo');
+
+        $this->assertEquals('select * from "eloquent_builder_test_model_parent_stubs" where "bar" = ? or not exists (select * from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id")', $builder->toSql());
+        $this->assertEquals(['baz'], $builder->getBindings());
+    }
+
+    public function testWhereDoesntHave()
+    {
+        $model = new EloquentBuilderTestModelParentStub;
+
+        $builder = $model->whereDoesntHave('foo', function ($query) {
+            $query->where('bar', 'baz');
+        });
+
+        $this->assertEquals('select * from "eloquent_builder_test_model_parent_stubs" where not exists (select * from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id" and "bar" = ?)', $builder->toSql());
+        $this->assertEquals(['baz'], $builder->getBindings());
+    }
+
+    public function testOrWhereDoesntHave()
+    {
+        $model = new EloquentBuilderTestModelParentStub;
+
+        $builder = $model->where('bar', 'baz')->orWhereDoesntHave('foo', function ($query) {
+            $query->where('qux', 'quux');
+        });
+
+        $this->assertEquals('select * from "eloquent_builder_test_model_parent_stubs" where "bar" = ? or not exists (select * from "eloquent_builder_test_model_close_related_stubs" where "eloquent_builder_test_model_parent_stubs"."foo_id" = "eloquent_builder_test_model_close_related_stubs"."id" and "qux" = ?)', $builder->toSql());
+        $this->assertEquals(['baz', 'quux'], $builder->getBindings());
     }
 
     public function testWhereKeyMethodWithInt()

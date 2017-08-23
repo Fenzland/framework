@@ -358,9 +358,26 @@ trait ValidatesAttributes
             return false;
         }
 
-        $date = DateTime::createFromFormat($parameters[0], $value);
+        $format = $parameters[0] == 'Y-m' ? '!Y-m' : $parameters[0];
+
+        $date = DateTime::createFromFormat($format, $value);
 
         return $date && $date->format($parameters[0]) == $value;
+    }
+
+    /**
+     * Validate that an attribute is equal to another date.
+     *
+     * @param  string  $attribute
+     * @param  mixed   $value
+     * @param  array   $parameters
+     * @return bool
+     */
+    public function validateDateEquals($attribute, $value, $parameters)
+    {
+        $this->requireParameterCount(1, $parameters, 'equals');
+
+        return $this->compareDates($attribute, $value, $parameters, '=');
     }
 
     /**
@@ -1414,6 +1431,8 @@ trait ValidatesAttributes
                 return $first <= $second;
             case '>=':
                 return $first >= $second;
+            case '=':
+                return $first === $second;
             default:
                 throw new InvalidArgumentException;
         }

@@ -212,9 +212,9 @@ class Route
      */
     public function getController()
     {
-        $class = $this->parseControllerCallback()[0];
-
         if (! $this->controller) {
+            $class = $this->parseControllerCallback()[0];
+
             $this->controller = $this->container->make($class);
         }
 
@@ -268,7 +268,7 @@ class Route
     /**
      * Compile the route into a Symfony CompiledRoute instance.
      *
-     * @return void
+     * @return \Symfony\Component\Routing\CompiledRoute
      */
     protected function compileRoute()
     {
@@ -779,7 +779,7 @@ class Route
     /**
      * Get the dispatcher for the route's controller.
      *
-     * @return ControllerDispatcherContract
+     * @return \Illuminate\Routing\Contracts\ControllerDispatcher
      */
     public function controllerDispatcher()
     {

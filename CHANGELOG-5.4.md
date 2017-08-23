@@ -1,5 +1,52 @@
 # Release Notes for 5.4.x
 
+## [Unreleased]
+
+### Added
+- Added `Str::start()` and `str_start()` helper ([#20569](https://github.com/laravel/framework/pull/20569))
+
+### Changed
+- Return the model instance from `Model::refresh()` ([#20657](https://github.com/laravel/framework/pull/20657))
+
+### Fixed
+- Fix duplicate user model import in `make:policy` ([#20645](https://github.com/laravel/framework/pull/20645), [48f5f23](https://github.com/laravel/framework/commit/48f5f23fd8615f48f2aee27a301c1f2f1505bdfb))
+- Fix PHP 7.2 incompatibility in `Builder::mergeWheres()` ([#20635](https://github.com/laravel/framework/pull/20635))
+
+
+## v5.4.33 (2017-08-14)
+
+### Added
+- Show error message if a reverted migration is not found ([#20499](https://github.com/laravel/framework/pull/20499), [a895b1e](https://github.com/laravel/framework/commit/a895b1eb0e50683c4583c24bb17b3f8d9e8127ab))
+
+### Changed
+- Moved `tap()` method from `Builder` to `BuildsQueries` ([#20384](https://github.com/laravel/framework/pull/20384))
+- Made Blade `or` operator case-insensitive ([#20425](https://github.com/laravel/framework/pull/20425))
+- Support `$amount = 0` in `Arr::random()` ([#20439](https://github.com/laravel/framework/pull/20439))
+- Reverted `doctrine/inflector` version change made in v5.4.31 ([#20227](https://github.com/laravel/framework/pull/20227))
+
+### Fixed
+- Fixed bug when using empty values in `SQLiteGrammar::compileInsert()` ([#20424](https://github.com/laravel/framework/pull/20424))
+- Fixed `$boolean` parameter being ignored in `Builder::addArrayOfWheres()` ([#20553](https://github.com/laravel/framework/pull/20553))
+- Fixed `JoinClause::whereIn()` when using a subquery ([#20453](https://github.com/laravel/framework/pull/20453))
+- Reset day parameter when using `Y-m` with `date_format` rule ([#20566](https://github.com/laravel/framework/pull/20566))
+
+
+## v5.4.32 (2017-08-03)
+
+### Added
+- Added `FilesystemAdapter::path()` method  ([#20395](https://github.com/laravel/framework/pull/20395))
+
+### Changed
+- Allow `Collection::random()` to return `0` items ([#20396](https://github.com/laravel/framework/pull/20396), [#20402](https://github.com/laravel/framework/pull/20402))
+- Accept options on `FilesystemAdapter::temporaryUrl()` ([#20394](https://github.com/laravel/framework/pull/20394))
+- Sync `withoutOverlapping` method on `Event` and `CallbackEvent` ([#20389](https://github.com/laravel/framework/pull/20389))
+- Prevent PHP file uploads by default unless explicitly allowed ([#20392](https://github.com/laravel/framework/pull/20392), [#20400](https://github.com/laravel/framework/pull/20400))
+- Allow other filesystem adapter to implement `temporaryUrl()` ([#20398](https://github.com/laravel/framework/pull/20398))
+
+### Fixed
+- Reverted breaking change on `BelongsToMany::create()` ([#20407](https://github.com/laravel/framework/pull/20407))
+
+
 ## v5.4.31 (2017-08-02)
 
 ### Added
