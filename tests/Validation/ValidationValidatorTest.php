@@ -1999,9 +1999,6 @@ class ValidationValidatorTest extends TestCase
         $this->assertFalse($v->passes());
     }
 
-    /**
-     * @group dimension
-     */
     public function testValidateImageDimensions()
     {
         // Knowing that demo image.png has width = 3 and height = 2
@@ -2322,6 +2319,10 @@ class ValidationValidatorTest extends TestCase
 
         $v = new Validator($trans, ['x' => ['Not', 'a', 'date']], ['x' => 'date_format:Y-m-d']);
         $this->assertTrue($v->fails());
+
+        // Set current machine date to 31/xx/xxxx
+        $v = new Validator($trans, ['x' => '2013-02'], ['x' => 'date_format:Y-m']);
+        $this->assertTrue($v->passes());
 
         $v = new Validator($trans, ['x' => '2000-01-01T00:00:00Atlantic/Azores'], ['x' => 'date_format:Y-m-d\TH:i:se']);
         $this->assertTrue($v->passes());
@@ -2708,9 +2709,6 @@ class ValidationValidatorTest extends TestCase
         $this->assertFalse($v->passes());
     }
 
-    /**
-     * @group validation
-     */
     public function testSometimesOnArraysInImplicitRules()
     {
         $trans = $this->getIlluminateArrayTranslator();
