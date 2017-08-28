@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphManyThrough;
 
 trait HasRelationships
 {
@@ -251,6 +252,32 @@ trait HasRelationships
         $instance = $this->newRelatedInstance($related);
 
         return new HasManyThrough($instance->newQuery(), $this, $through, $firstKey, $secondKey, $localKey);
+    }
+
+    /**
+     * Define a morph-many-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $name
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function morphManyThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null)
+    {
+        $through = new $through;
+
+        list($firstType, $firstKey) = $this->getMorphs($name, $firstType, $firstKey);
+
+        $secondKey = $secondKey ?: $through->getForeignKey();
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $instance = $this->newRelatedInstance($related);
+
+        return new MorphManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey);
     }
 
     /**
