@@ -1,6 +1,6 @@
 <?php
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -586,11 +586,12 @@ if (! function_exists('now')) {
     /**
      * Create a new Carbon instance for the current time.
      *
-     * @return \Carbon\Carbon
+     * @param  \DateTimeZone|string|null $tz
+     * @return \Illuminate\Support\Carbon
      */
-    function now()
+    function now($tz = null)
     {
-        return Carbon::now();
+        return Carbon::now($tz);
     }
 }
 
@@ -823,11 +824,12 @@ if (! function_exists('today')) {
     /**
      * Create a new Carbon instance for the current date.
      *
-     * @return \Carbon\Carbon
+     * @param  \DateTimeZone|string|null $tz
+     * @return \Illuminate\Support\Carbon
      */
-    function today()
+    function today($tz = null)
     {
-        return Carbon::today();
+        return Carbon::today($tz);
     }
 }
 

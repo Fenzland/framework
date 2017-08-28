@@ -1826,11 +1826,12 @@ class DatabaseQueryBuilderTest extends TestCase
 
     /**
      * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage Call to undefined method Illuminate\Database\Query\Builder::noValidMethodHere()
      */
     public function testBuilderThrowsExpectedExceptionWithUndefinedMethod()
     {
         $builder = $this->getBuilder();
+        $builder->getConnection()->shouldReceive('select');
+        $builder->getProcessor()->shouldReceive('processSelect')->andReturn([]);
 
         $builder->noValidMethodHere();
     }

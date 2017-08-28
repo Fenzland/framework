@@ -345,9 +345,11 @@ class Worker
             // First, we will go ahead and mark the job as failed if it will exceed the maximum
             // attempts it is allowed to run the next time we process it. If so we will just
             // go ahead and mark it as failed now so we do not have to release this again.
-            $this->markJobAsFailedIfWillExceedMaxAttempts(
-                $connectionName, $job, (int) $options->maxTries, $e
-            );
+            if (! $job->hasFailed()) {
+                $this->markJobAsFailedIfWillExceedMaxAttempts(
+                    $connectionName, $job, (int) $options->maxTries, $e
+                );
+            }
 
             $this->raiseExceptionOccurredJobEvent(
                 $connectionName, $job, $e
@@ -378,12 +380,18 @@ class Worker
     {
         $maxTries = ! is_null($job->maxTries()) ? $job->maxTries() : $maxTries;
 
-        if ($maxTries === 0 || $job->attempts() <= $maxTries) {
+        $timeoutAt = $job->timeoutAt();
+
+        if ($timeoutAt && now()->getTimestamp() <= $timeoutAt) {
+            return;
+        }
+
+        if (! $timeoutAt && ($maxTries === 0 || $job->attempts() <= $maxTries)) {
             return;
         }
 
         $this->failJob($connectionName, $job, $e = new MaxAttemptsExceededException(
-            'A queued job has been attempted too many times. The job may have previously timed out.'
+            'A queued job has been attempted too many times or run too long. The job may have previously timed out.'
         ));
 
         throw $e;
@@ -401,6 +409,10 @@ class Worker
     protected function markJobAsFailedIfWillExceedMaxAttempts($connectionName, $job, $maxTries, $e)
     {
         $maxTries = ! is_null($job->maxTries()) ? $job->maxTries() : $maxTries;
+
+        if ($job->timeoutAt() && $job->timeoutAt() <= now()->getTimestamp()) {
+            $this->failJob($connectionName, $job, $e);
+        }
 
         if ($maxTries > 0 && $job->attempts() >= $maxTries) {
             $this->failJob($connectionName, $job, $e);
