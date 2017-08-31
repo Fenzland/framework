@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphManyThrough;
+use Illuminate\Database\Eloquent\Relations\ManyBelongsTo;
+use Illuminate\Database\Eloquent\Relations\ManyHasOne;
+use Illuminate\Database\Eloquent\Relations\ManyHasMany;
 
 trait HasRelationships
 {
@@ -120,6 +123,83 @@ trait HasRelationships
 
         return new BelongsTo(
             $instance->newQuery(), $this, $foreignKey, $ownerKey, $relation
+        );
+    }
+
+    /**
+     * Define an inverse many-belongsTo-one or many relationship.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKeys
+     * @param  string  $ownerKey
+     * @param  string  $relation
+     * @return \Illuminate\Database\Eloquent\Relations\ManyBelongsTo
+     */
+    public function manyBelongsTo($related, $foreignKeys = null, $ownerKey = null, $relation = null)
+    {
+        // If no relation name was given, we will use this debug backtrace to extract
+        // the calling method's name and use that as the relationship name as most
+        // of the time this will be what we desire to use for the relationships.
+        if (is_null($relation)) {
+            $relation = $this->guessBelongsToRelation();
+        }
+
+        $instance = $this->newRelatedInstance($related);
+
+        // If no foreign key was supplied, we can use a backtrace to guess the proper
+        // foreign key name by using the name of the relationship function, which
+        // when combined with an "_id" should conventionally match the columns.
+        if (is_null($foreignKeys)) {
+            $foreignKeys = Str::singular(Str::snake($relation)).'_'.Str::plural($instance->getKeyName());
+        }
+
+        // Once we have the foreign key names, we'll just create a new Eloquent query
+        // for the related models and returns the relationship instance which will
+        // actually be responsible for retrieving and hydrating every relations.
+        $ownerKey = $ownerKey ?: $instance->getKeyName();
+
+        return new ManyBelongsTo(
+            $instance->newQuery(), $this, $foreignKeys, $ownerKey, $relation
+        );
+    }
+
+    /**
+     * Define a many-has-one relationship.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKeys
+     * @param  string  $localKey
+     * @return \Illuminate\Database\Eloquent\Relations\ManyHasOne
+     */
+    public function manyHasOne($related, $foreignKeys = null, $localKey = null)
+    {
+        $instance = $this->newRelatedInstance($related);
+
+        $foreignKeys = $foreignKeys ?: Str::plural($this->getForeignKey());
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        return new ManyHasOne($instance->newQuery(), $this, $instance->getTable().'.'.$foreignKeys, $localKey);
+    }
+
+    /**
+     * Define a many-has-many relationship.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKeys
+     * @param  string  $localKey
+     * @return \Illuminate\Database\Eloquent\Relations\ManyHasMany
+     */
+    public function manyHasMany($related, $foreignKeys = null, $localKey = null)
+    {
+        $instance = $this->newRelatedInstance($related);
+
+        $foreignKeys = $foreignKeys ?: Str::plural($this->getForeignKey());
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        return new ManyHasMany(
+            $instance->newQuery(), $this, $instance->getTable().'.'.$foreignKeys, $localKey
         );
     }
 
