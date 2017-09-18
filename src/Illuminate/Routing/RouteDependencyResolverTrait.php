@@ -48,7 +48,7 @@ trait RouteDependencyResolverTrait
                 $parameter, $parameters
             );
 
-            $results[] = $instance?:$parameters[$parameter->name]??$parameter->getDefaultValue();
+            $results[] = $instance?:$parameters[$parameter->name]??$parameter->getDefaultValue()??null;
             continue;
 
             if (! is_null($instance)) {
