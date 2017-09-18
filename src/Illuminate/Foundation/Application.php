@@ -29,7 +29,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      *
      * @var string
      */
-    const VERSION = '5.5-dev';
+    const VERSION = '5.6-dev';
 
     /**
      * The base path for the Laravel installation.
@@ -524,7 +524,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
-     * Determine if we are running in the console.
+     * Determine if the application is running in the console.
      *
      * @return bool
      */
@@ -534,7 +534,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
-     * Determine if we are running unit tests.
+     * Determine if the application is running unit tests.
      *
      * @return bool
      */
@@ -1145,7 +1145,16 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     {
         parent::flush();
 
+        $this->buildStack = [];
         $this->loadedProviders = [];
+        $this->bootedCallbacks = [];
+        $this->bootingCallbacks = [];
+        $this->deferredServices = [];
+        $this->reboundCallbacks = [];
+        $this->serviceProviders = [];
+        $this->resolvingCallbacks = [];
+        $this->afterResolvingCallbacks = [];
+        $this->globalResolvingCallbacks = [];
     }
 
     /**

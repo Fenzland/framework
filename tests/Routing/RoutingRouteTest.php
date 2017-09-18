@@ -296,6 +296,20 @@ class RoutingRouteTest extends TestCase
         $this->assertEquals('foo.bar', $router->currentRouteName());
     }
 
+    public function testRouteGetAction()
+    {
+        $router = $this->getRouter();
+
+        $route = $router->get('foo', function () {
+            return 'foo';
+        })->name('foo');
+
+        $this->assertTrue(is_array($route->getAction()));
+        $this->assertArrayHasKey('as', $route->getAction());
+        $this->assertEquals('foo', $route->getAction('as'));
+        $this->assertNull($route->getAction('unknown_property'));
+    }
+
     public function testMacro()
     {
         $router = $this->getRouter();
@@ -307,6 +321,25 @@ class RoutingRouteTest extends TestCase
         $router->webhook();
         $this->assertEquals('OK', $router->dispatch(Request::create('webhook', 'GET'))->getContent());
         $this->assertEquals('OK', $router->dispatch(Request::create('webhook', 'POST'))->getContent());
+    }
+
+    public function testRouteMacro()
+    {
+        $router = $this->getRouter();
+
+        Route::macro('breadcrumb', function ($breadcrumb) {
+            $this->action['breadcrumb'] = $breadcrumb;
+
+            return $this;
+        });
+
+        $router->get('foo', function () {
+            return 'bar';
+        })->breadcrumb('fooBreadcrumb')->name('foo');
+
+        $router->getRoutes()->refreshNameLookups();
+
+        $this->assertEquals('fooBreadcrumb', $router->getRoutes()->getByName('foo')->getAction()['breadcrumb']);
     }
 
     public function testClassesCanBeInjectedIntoRoutes()
