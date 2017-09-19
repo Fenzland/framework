@@ -17,8 +17,8 @@
         "php": ">=7.0",
         "ext-mbstring": "*",
         "ext-openssl": "*",
-        "illuminate/contracts": "5.5.*",
-        "illuminate/support": "5.5.*"
+        "illuminate/contracts": "'5.5.*.*'",
+        "illuminate/support": "5.5.*.*"
     },
     "autoload": {
         "psr-4": {
