@@ -15,9 +15,9 @@
     ],
     "require": {
         "php": ">=7.0",
-        "illuminate/container": "5.5.*",
-        "illuminate/contracts": "5.5.*",
-        "illuminate/support": "5.5.*"
+        "illuminate/container": "5.5.*.*",
+        "illuminate/contracts": "5.5.*.*",
+        "illuminate/support": "5.5.*.*"
     },
     "autoload": {
         "psr-4": {
