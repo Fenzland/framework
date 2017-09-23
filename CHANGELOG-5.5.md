@@ -1,18 +1,90 @@
 # Release Notes for 5.5.x
 
-## [Unreleased]
+## v5.5.12 (2017-09-22)
+
+### Added
+- Added "software" as an uncountable word ([#21324](https://github.com/laravel/framework/pull/21324))
+
+### Fixed
+- Don't compare remember token if it's `null` ([#21328](https://github.com/laravel/framework/pull/21328))
+
+
+## v5.5.11 (2017-09-21)
+
+### Fixed
+- Fixed bug in `EloquentUserProvider` introduced in [#21320](https://github.com/laravel/framework/pull/21320) ([#21323](https://github.com/laravel/framework/pull/21323))
+
+
+## v5.5.10 (2017-09-21)
+
+### Added
+- Added `Route::respondWithRoute($name)` method ([#21299](https://github.com/laravel/framework/pull/21299), [66c5e46](https://github.com/laravel/framework/commit/66c5e462dbdb9d0c9d23114da3a3dc1b6e9fa0a1))
+- Added `$strict` parameter to `TestResponse::assertJson()` ([#21301](https://github.com/laravel/framework/pull/21301))
+
+### Changed
+- Added "firmware" as an uncountable word ([#21306](https://github.com/laravel/framework/pull/21306))
+- Allow `MorphTo::associate()` accept `null` ([#21318](https://github.com/laravel/framework/pull/21318))
+- Changed `__()` signature to match `Translation::trans()` ([10c013c](https://github.com/laravel/framework/commit/10c013c564b7e518640e42e97d9178f9e05ec7d9))
+
+### Fixed
+- Add missing `driver` parameter to doctrine connection ([#21297](https://github.com/laravel/framework/pull/21297))
+
+### Security
+- Perform constant-time token comparison in `DatabaseUserProvider` ([#21320](https://github.com/laravel/framework/pull/21320))
+
+
+## v5.5.9 (2017-09-20)
+
+### Changed
+- Perform stable sort in `Collection::sortBy()` (2nd attempt) ([#21270](https://github.com/laravel/framework/pull/21270))
+- Return empty string if database session key is expired ([#21277](https://github.com/laravel/framework/pull/21277))
+
+### Fixed
+- Fixed setting `Model::UPDATED_AT` in `SoftDeletes` ([#21286](https://github.com/laravel/framework/pull/21286))
+- Apply custom pivot model attribute casting on arrays ([#21275](https://github.com/laravel/framework/pull/21275))
+
+
+## v5.5.8 (2017-09-20)
+
+### Fixed
+- Fixed issue with routes sorting ([#21261](https://github.com/laravel/framework/pull/21261))
+
+
+## v5.5.7 (2017-09-19)
+
+### Fixed
+- Fix `CacheClearCommand` binding ([#21256](https://github.com/laravel/framework/pull/21256))
+
+
+## v5.5.6 (2017-09-19)
+
+### Changed
+- Clear real-time facades when running `cache:clear` ([#21250](https://github.com/laravel/framework/pull/21250), [1856601](https://github.com/laravel/framework/commit/185660178ad213140411ca27550cdaf44c650002))
+
+### Fixed
+- Reverted stable sort support in `Collection::sortBy()` ([#21255](https://github.com/laravel/framework/pull/21255))
+
+
+## v5.5.5 (2017-09-19)
 
 ### Added
 - Added `:input` placeholder in validation error messages ([#21175](https://github.com/laravel/framework/pull/21175))
 - Added `@includeFirst` Blade directive ([#21172](https://github.com/laravel/framework/pull/21172))
 - Allow setting column styles for tables in Artisan commands ([#21169](https://github.com/laravel/framework/pull/21169))
+- Added `ValidatesRequests::extractInputFromRules()` method ([#21192](https://github.com/laravel/framework/pull/21192))
+- Added `-m` shortcut to `make:factory` ([#21219](https://github.com/laravel/framework/pull/21219))
+- Added ability to set a fallback (catch-all) route ([#21234](https://github.com/laravel/framework/pull/21234))
 
 ### Changed
 - Support `null` on `Model::UPDATED_AT` ([#21178](https://github.com/laravel/framework/pull/21178))
 - Render views from config while building error views ([#21145](https://github.com/laravel/framework/pull/21145))
+- Use multibyte functions in some `Str` methods ([#21207](https://github.com/laravel/framework/pull/21207))
+- Perform stable sort in `Collection::sortBy()` ([#21214](https://github.com/laravel/framework/pull/21214))
 
 ### Fixed
 - Ignore `SELECT` bindings in `prepareBindingsForUpdate()` ([#21173](https://github.com/laravel/framework/pull/21173))
+- Fixed `remember` check in `AuthenticatesUsers::attemptLogin()` ([#21221](https://github.com/laravel/framework/pull/21221))
+- Added "hardware" as an uncountable word ([#21236](https://github.com/laravel/framework/pull/21236))
 
 
 ## v5.5.4 (2017-09-13)
