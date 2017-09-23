@@ -458,6 +458,20 @@ class Arr
     }
 
     /**
+     * Get many values from the array, and remove them.
+     *
+     * @param  array   $array
+     * @param  string  ...$keys
+     * @return mixed
+     */
+    public static function pullMany(&$array, ...$keys)
+    {
+        return array_map(function ($key) use (&$array) {
+            return static::pull($array, $key);
+        }, $array);
+    }
+
+    /**
      * Get one or a specified number of random values from an array.
      *
      * @param  array  $array
