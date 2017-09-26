@@ -36,14 +36,15 @@ class TokenGuard implements Guard
      *
      * @param  \Illuminate\Contracts\Auth\UserProvider  $provider
      * @param  \Illuminate\Http\Request  $request
+     * @param  array  $config
      * @return void
      */
-    public function __construct(UserProvider $provider, Request $request)
+    public function __construct(UserProvider $provider, Request $request, array$config)
     {
         $this->request = $request;
         $this->provider = $provider;
-        $this->inputKey = 'api_token';
-        $this->storageKey = 'api_token';
+        $this->inputKey = $config['input_key']??'api_token';
+        $this->storageKey = $config['storage_key']??'api_token';
     }
 
     /**
@@ -80,7 +81,7 @@ class TokenGuard implements Guard
      */
     public function getTokenForRequest()
     {
-        $token = $this->request->query($this->inputKey);
+        $token = $this->request->query($this->inputKey) ?? $this->request->headers->get($this->inputKey);
 
         if (empty($token)) {
             $token = $this->request->input($this->inputKey);
@@ -129,5 +130,25 @@ class TokenGuard implements Guard
         $this->request = $request;
 
         return $this;
+    }
+
+    /**
+     * Determine if the current user is authenticated.
+     *
+     * @return bool
+     */
+    public function check()
+    {
+        $user = $this->user();
+
+        if (is_null($user)) {
+            return false;
+        }
+
+        if (isset($user->token_expired_at) && $user->token_expired_at instanceof \Carbon\Carbon && \Carbon\Carbon::now()>$user->token_expired_at) {
+            return false;
+        }
+
+        return true;
     }
 }
