@@ -191,7 +191,7 @@ class Repository implements CacheContract, ArrayAccess
             return $this->putMany($key, $value);
         }
 
-        if (is_infinite($minutes)) {
+        if (is_float($minutes) && is_infinite($minutes)) {
             return $this->forever($key, $value);
         }
 
