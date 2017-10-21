@@ -74,6 +74,23 @@ class ManyBelongsTo extends Relation
     }
 
     /**
+     * Execute the query as a "select" statement.
+     *
+     * @param  array  $columns
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function get($columns = ['*'])
+    {
+        $results = parent::get($columns)->keyBy($this->ownerKey);
+
+        return (new Collection(array_map(function ($key) use ($results) {
+
+            return $results->get($key, null);
+
+        }, explode(',', $this->child->{$this->foreignKeys}))))->filter();
+    }
+
+    /**
      * Get the results of the relationship.
      *
      * @return mixed

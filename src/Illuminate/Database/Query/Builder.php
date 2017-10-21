@@ -17,8 +17,9 @@ use Illuminate\Database\Concerns\BuildsQueries;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Database\Query\Processors\Processor;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Database\QueryBuilder as QueryBuilderInterface;
 
-class Builder
+class Builder implements QueryBuilderInterface
 {
     use BuildsQueries, Macroable {
         __call as macroCall;
@@ -845,6 +846,30 @@ class Builder
         $this->wheres[] = compact('type', 'column', 'query', 'boolean');
 
         $this->addBinding($query->getBindings(), 'where');
+
+        return $this;
+    }
+
+    /**
+     * Add a where set contains clause to the query.
+     *
+     * @param  string  $sql
+     * @param  mixed   $values
+     * @param  string  $innerBoolean
+     * @param  string  $boolean
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    public function whereSetContains($column, $values, $innerBoolean = 'and', $boolean = 'and')
+    {
+        $values = (array) $values;
+
+        $type = 'SetContains';
+
+        $this->wheres[] = compact('type', 'column', 'values', 'innerBoolean', 'boolean');
+
+        foreach ($values as $value) {
+            $this->addBinding($value, 'where');
+        }
 
         return $this;
     }

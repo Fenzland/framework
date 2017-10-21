@@ -11,11 +11,12 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Concerns\BuildsQueries;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Contracts\Database\QueryBuilder as QueryBuilderInterface;
 
 /**
  * @mixin \Illuminate\Database\Query\Builder
  */
-class Builder
+class Builder implements QueryBuilderInterface
 {
     use BuildsQueries, Concerns\QueriesRelationships;
 
