@@ -1,5 +1,111 @@
 # Release Notes for 5.5.x
 
+## v5.5.18 (2017-10-19)
+
+### Added
+- Made `Redirector` macroable ([#21714](https://github.com/laravel/framework/pull/21714))
+
+### Changed
+- Prevent reloading default relationships while lazy eager-loading ([#21710](https://github.com/laravel/framework/pull/21710))
+- Don't reload pivot relationship on refresh ([#21713](https://github.com/laravel/framework/pull/21713))
+- Unify Vue.js preset ([#21711](https://github.com/laravel/framework/pull/21711), [#21724](https://github.com/laravel/framework/pull/21724))
+- Revert multibyte functions in `Str` ([#21722](https://github.com/laravel/framework/pull/21722))
+- Remove hardcoded fields in DatabaseUserProvider ([#21749](https://github.com/laravel/framework/pull/21749))
+
+### Fixed
+- Don't recreate the SQLite database file in `refreshDatabaseFile()` ([#21720](https://github.com/laravel/framework/pull/21720))
+
+
+## v5.5.17 (2017-10-17)
+
+### Fixed
+- Allow `@json` options to be `0` ([#21692](https://github.com/laravel/framework/pull/21692))
+- Fixed "invalid argument" error in `ServiceProvider::loadViewsFrom()` ([#21705](https://github.com/laravel/framework/pull/21705))
+
+
+## v5.5.16 (2017-10-16)
+
+_No changes._
+
+
+## v5.5.15 (2017-10-16)
+
+### Added
+- Added missing PostgreSQL network address operators ([#21518](https://github.com/laravel/framework/pull/21518))
+- Added raw and same-site parameters to `cookie()` helper ([#21551](https://github.com/laravel/framework/pull/21551))
+- Added option to create pivot model to `make:model` command ([#21549](https://github.com/laravel/framework/pull/21549))
+- Added support for a `failed()` method to mailables and notifications ([#21585](https://github.com/laravel/framework/pull/21585))
+- Added `__toString` on `ViewErrorBag` ([#21605](https://github.com/laravel/framework/pull/21605))
+- Support higher order call of `keyBy()` ([#21606](https://github.com/laravel/framework/pull/21606))
+- Generate `@else*` directives for `Blade::if()` ([#21611](https://github.com/laravel/framework/pull/21611))
+- Made `Response` and `JsonResponse` macroable ([#21669](https://github.com/laravel/framework/pull/21669))
+
+### Changed
+- Escape HTML characters in `@json` directive ([#21574](https://github.com/laravel/framework/pull/21574))
+- Only accept strings in `Session::flash()` ([#21576](https://github.com/laravel/framework/pull/21576))
+- Use message from `AuthenticationException` in `Handler::unauthenticated()` ([#21575](https://github.com/laravel/framework/pull/21575))
+- Don't use global scope while touching parent timestamp ([#21604](https://github.com/laravel/framework/pull/21604))
+- Accept multiple middleware when defining middleware fluently ([#21621](https://github.com/laravel/framework/pull/21621))
+- Bind `true` as `1` while preparing an SQL statement ([#21623](https://github.com/laravel/framework/pull/21623))
+- Ensure config load order across multiple installations ([#21634](https://github.com/laravel/framework/pull/21634))
+- Pass previous exception to `AccessDeniedHttpException` and `HttpException` ([#21645](https://github.com/laravel/framework/pull/21645))
+- Unify Bootstrap preset ([#21686](https://github.com/laravel/framework/pull/21686), [#21685](https://github.com/laravel/framework/pull/21685))
+
+### Fixed
+- Reset table cell margins in mail theme ([#21647](https://github.com/laravel/framework/pull/21647))
+- Check for vendor views for each paths given in `config/view.php` ([#21636](https://github.com/laravel/framework/pull/21636))
+- Prevent negative offsets when paginating collection ([#21658](https://github.com/laravel/framework/pull/21658))
+- Flush all listeners of custom Eloquent events ([#21688](https://github.com/laravel/framework/pull/21688))
+
+
+## v5.5.14 (2017-10-03)
+
+### Added
+- Allow testing anonymous notifiables ([#21379](https://github.com/laravel/framework/pull/21379))
+- Add relation and model attributes on `RelationNotFoundException` ([#21426](https://github.com/laravel/framework/pull/21426))
+- Allow passing a callback to `with()` ([#21445](https://github.com/laravel/framework/pull/21445))
+- Added `PotentiallyMissing` interface to `MissingValue` class ([be7dccc](https://github.com/laravel/framework/commit/be7dccca9f9249c928108d957fe70e78d370d26e))
+- Accept `$queue` name on `Schedule::job()` ([#21473](https://github.com/laravel/framework/pull/21473))
+- Added callback and default parameter `whenLoaded()` method ([#21490](https://github.com/laravel/framework/pull/21490))
+- Allow marking notifications as unread ([#21497](https://github.com/laravel/framework/pull/21497))
+- Added `Collection::mapToDictionary()` method ([#21505](https://github.com/laravel/framework/pull/21505))
+- Added `make:exception` command ([#21483](https://github.com/laravel/framework/pull/21483))
+
+### Changed
+- Reset RefreshDatabaseState after DatabaseMigrations rolls back ([#21325](https://github.com/laravel/framework/pull/21325))
+- Make sure page resolver returns an integer ([#21378](https://github.com/laravel/framework/pull/21378))
+- Allow single error messages in `ValidationException::withMessages()` ([#21400](https://github.com/laravel/framework/pull/21400))
+- Revert `Collection::sortBy()` behaviour to 5.4 ([#21382](https://github.com/laravel/framework/pull/21382))
+- Use fill instead of forceFill while storing pivot attributes ([#21403](https://github.com/laravel/framework/pull/21403))
+- Alphabetize `vendor:publish` options ([#21412](https://github.com/laravel/framework/pull/21412))
+- Extract `AnonymousResourceCollection` into class to allow serialization ([#21456](https://github.com/laravel/framework/pull/21456))
+- Extract some methods from `Resource` into `ConditionallyLoadsAttributes` trait ([28d945e](https://github.com/laravel/framework/commit/28d945e557736598c10c492c2918d5697b70570d), [1f37ccc](https://github.com/laravel/framework/commit/1f37ccc06485410fa0866c012b083a042c4cc73e))
+
+### Fixed
+- Ensure user is logged in before expecting user instance ([#21377](https://github.com/laravel/framework/pull/21377))
+- Remove leading slash from class while resolving controllers ([#21407](https://github.com/laravel/framework/pull/21407))
+- Make sure SQL for virtual columns is added after the unsigned modifier ([#21441](https://github.com/laravel/framework/pull/21441))
+- Fixed `Collection::contains()` when the found value is `null` ([#21442](https://github.com/laravel/framework/pull/21442))
+- Fixed merge issue in `Relation::morphMap()` ([#21458](https://github.com/laravel/framework/pull/21458))
+- Clear count query select bindings in `Relation::getRelationExistenceCountQuery()` ([#21468](https://github.com/laravel/framework/pull/21468))
+- Fixed user model type hints policy stub ([#21499](https://github.com/laravel/framework/pull/21499))
+
+
+## v5.5.13 (2017-09-24)
+
+### Added
+- Added optional config option for whoops blacklist ([#21336](https://github.com/laravel/framework/pull/21336), [a83ebc1](https://github.com/laravel/framework/commit/a83ebc15e768fab3955013bf5797fa090ee693d7))
+- Added `Collection::pad()` method ([#21342](https://github.com/laravel/framework/pull/21342))
+
+### Changed
+- Made `$callback` parameter of `Arr::sort()` optional  ([#21337](https://github.com/laravel/framework/pull/21337))
+- Support setting custom `REMOTE_ADDR` in `MakesHttpRequests` ([#21351](https://github.com/laravel/framework/pull/21351))
+- Changed visibility of `$output` to public on console events ([#21356](https://github.com/laravel/framework/pull/21356))
+
+### Fixed
+- Don't compare remember token in user providers if it's `null` (srsly for real this time, pinky promise) ([#21328](https://github.com/laravel/framework/pull/21328), [#21368](https://github.com/laravel/framework/pull/21368))
+
+
 ## v5.5.12 (2017-09-22)
 
 ### Added
