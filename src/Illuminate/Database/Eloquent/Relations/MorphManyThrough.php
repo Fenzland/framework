@@ -30,15 +30,16 @@ class MorphManyThrough extends HasManyThrough
      * @param  string  $firstKey
      * @param  string  $secondKey
      * @param  string  $localKey
+     * @param  string  $secondLocalKey
      * @return void
      */
-    public function __construct(Builder $query, Model $farParent, Model $throughParent, $firstType, $firstKey, $secondKey, $localKey)
+    public function __construct(Builder $query, Model $farParent, Model $throughParent, $firstType, $firstKey, $secondKey, $localKey, $secondLocalKey)
     {
         $this->morphType = $firstType;
 
         $this->morphClass = $farParent->getMorphClass();
 
-        parent::__construct($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey);
+        parent::__construct($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
 
     /**
