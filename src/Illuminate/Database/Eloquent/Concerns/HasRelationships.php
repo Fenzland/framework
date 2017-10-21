@@ -346,9 +346,10 @@ trait HasRelationships
      * @param  string|null  $firstKey
      * @param  string|null  $secondKey
      * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function morphManyThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null)
+    public function morphManyThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
     {
         $through = new $through;
 
@@ -358,9 +359,11 @@ trait HasRelationships
 
         $localKey = $localKey ?: $this->getKeyName();
 
+        $secondLocalKey = $secondLocalKey ?: $through->getKeyName();
+
         $instance = $this->newRelatedInstance($related);
 
-        return new MorphManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey);
+        return new MorphManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
 
     /**
