@@ -366,6 +366,18 @@ class Collection extends BaseCollection implements QueueableCollection
     }
 
     /**
+     * Pad collection to the specified length with a value.
+     *
+     * @param  int  $size
+     * @param  mixed $value
+     * @return \Illuminate\Support\Collection
+     */
+    public function pad($size, $value)
+    {
+        return $this->toBase()->pad($size, $value);
+    }
+
+    /**
      * Get the type of the entities being queued.
      *
      * @return string|null
@@ -396,6 +408,16 @@ class Collection extends BaseCollection implements QueueableCollection
     public function getQueueableIds()
     {
         return $this->modelKeys();
+    }
+
+    /**
+     * Get the relationships of the entities being queued.
+     *
+     * @return array
+     */
+    public function getQueueableRelations()
+    {
+        return $this->isNotEmpty() ? $this->first()->getRelations() : [];
     }
 
     /**
