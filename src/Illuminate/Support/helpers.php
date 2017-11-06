@@ -246,6 +246,20 @@ if (! function_exists('array_pull')) {
     }
 }
 
+if (! function_exists('array_pull_many')) {
+    /**
+     * Get many values from the array, and remove them.
+     *
+     * @param  array   $array
+     * @param  string  ...$keys
+     * @return mixed
+     */
+    function array_pull_many(&$array, ...$keys)
+    {
+        return Arr::pullMany($array, ...$key);
+    }
+}
+
 if (! function_exists('array_random')) {
     /**
      * Get a random value from an array.
@@ -385,6 +399,21 @@ if (! function_exists('class_basename')) {
         $class = is_object($class) ? get_class($class) : $class;
 
         return basename(str_replace('\\', '/', $class));
+    }
+}
+
+if (! function_exists('class_namespace')) {
+    /**
+     * Get the class namespace of the given object / class.
+     *
+     * @param  string|object  $class
+     * @return string
+     */
+    function class_namespace($class)
+    {
+        $class = is_object($class) ? get_class($class) : $class;
+
+        return preg_replace('/^\\.$|\\//', '\\', dirname(str_replace('\\', '/', $class)));
     }
 }
 

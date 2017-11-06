@@ -152,9 +152,7 @@ trait AuthenticatesUsers
     {
         $this->guard()->logout();
 
-        $request->session()->invalidate();
-
-        return redirect('/');
+        return redirect($this->logoutRedirectPath());
     }
 
     /**
