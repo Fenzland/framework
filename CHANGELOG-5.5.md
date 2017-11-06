@@ -3,15 +3,99 @@
 ## [Unreleased]
 
 ### Added
+- Added `TestResponse::assertJsonMissingExact()` ([#21881](https://github.com/laravel/framework/pull/21881))
+- Added `allOnQueue()` and `allOnConnection()` for job chaining ([#21765](https://github.com/laravel/framework/pull/21765))
+- Support variadic arguments on fluent `Route::middleware()` ([#21930](https://github.com/laravel/framework/pull/21930))
+- Added precision to `Blueprint::time()` ([#21936](https://github.com/laravel/framework/pull/21936))
+
+### Changed
+- Added "kin" as an uncountable word ([#21843](https://github.com/laravel/framework/pull/21843))
+- Improved geo spatial support ([#21919](https://github.com/laravel/framework/pull/21919))
+- Include job name in the `MaxAttemptsExcededException` ([#21941](https://github.com/laravel/framework/pull/21941), [#21943](https://github.com/laravel/framework/pull/21943))
+
+### Fixed
+- Fixed `BroadcastController` namespace issue ([#21844](https://github.com/laravel/framework/pull/21844))
+- Fixed eager loading `HasManyThrough` relations with custom intermediate and local key ([#21902](https://github.com/laravel/framework/pull/21902))
+- Use table aliases when calling self-referencing `HasManyThrough` relation ([#21883](https://github.com/laravel/framework/pull/21883))
+- Fixed Vue component file name in React present ([#21945](https://github.com/laravel/framework/pull/21945))
+- Reverted changes to `BadMethodException` in [#20196](https://github.com/laravel/framework/pull/20196) ([#21929](https://github.com/laravel/framework/pull/21929))
+
+
+## v5.5.19 (2017-10-25)
+
+### Added
+- Added `MakesHttpRequests::followingRedirects()` method ([#21771](https://github.com/laravel/framework/pull/21771))
+- Added `MakesHttpRequests::from()` method ([#21788](https://github.com/laravel/framework/pull/21788))
+- Added `notifyNow()` method to notifiables ([#21795](https://github.com/laravel/framework/pull/21795))
+- Added `TestResponse::assertCookieExpired()` method ([#21793](https://github.com/laravel/framework/pull/21793))
+- Added `TestResponse::assertCookieMissing()` method ([#21803](https://github.com/laravel/framework/pull/21803))
+
+### Changed
+- Allow the distinct validation rule to optionally ignore case ([#21757](https://github.com/laravel/framework/pull/21757))
+
+### Fixed
+- Excluding `spatial_ref_sys` table from `migrate:fresh` ([#21778](https://github.com/laravel/framework/pull/21778))
+- Fixed issue with `SessionGuard` setting the logged in user after firing the `Authenticated` event ([#21790](https://github.com/laravel/framework/pull/21790))
+- Fixed issue with `Model::refresh()` when model has a global scope ([#21815](https://github.com/laravel/framework/pull/21815))
+- Fixed scheduling a non-queuable job ([#21820](https://github.com/laravel/framework/pull/21820))
+
+
+## v5.5.18 (2017-10-19)
+
+### Added
+- Made `Redirector` macroable ([#21714](https://github.com/laravel/framework/pull/21714))
+
+### Changed
+- Prevent reloading default relationships while lazy eager-loading ([#21710](https://github.com/laravel/framework/pull/21710))
+- Don't reload pivot relationship on refresh ([#21713](https://github.com/laravel/framework/pull/21713))
+- Unify Vue.js preset ([#21711](https://github.com/laravel/framework/pull/21711), [#21724](https://github.com/laravel/framework/pull/21724))
+- Revert multibyte functions in `Str` ([#21722](https://github.com/laravel/framework/pull/21722))
+- Remove hardcoded fields in DatabaseUserProvider ([#21749](https://github.com/laravel/framework/pull/21749))
+
+### Fixed
+- Don't recreate the SQLite database file in `refreshDatabaseFile()` ([#21720](https://github.com/laravel/framework/pull/21720))
+
+
+## v5.5.17 (2017-10-17)
+
+### Fixed
+- Allow `@json` options to be `0` ([#21692](https://github.com/laravel/framework/pull/21692))
+- Fixed "invalid argument" error in `ServiceProvider::loadViewsFrom()` ([#21705](https://github.com/laravel/framework/pull/21705))
+
+
+## v5.5.16 (2017-10-16)
+
+_No changes._
+
+
+## v5.5.15 (2017-10-16)
+
+### Added
 - Added missing PostgreSQL network address operators ([#21518](https://github.com/laravel/framework/pull/21518))
 - Added raw and same-site parameters to `cookie()` helper ([#21551](https://github.com/laravel/framework/pull/21551))
 - Added option to create pivot model to `make:model` command ([#21549](https://github.com/laravel/framework/pull/21549))
 - Added support for a `failed()` method to mailables and notifications ([#21585](https://github.com/laravel/framework/pull/21585))
+- Added `__toString` on `ViewErrorBag` ([#21605](https://github.com/laravel/framework/pull/21605))
+- Support higher order call of `keyBy()` ([#21606](https://github.com/laravel/framework/pull/21606))
+- Generate `@else*` directives for `Blade::if()` ([#21611](https://github.com/laravel/framework/pull/21611))
+- Made `Response` and `JsonResponse` macroable ([#21669](https://github.com/laravel/framework/pull/21669))
 
 ### Changed
 - Escape HTML characters in `@json` directive ([#21574](https://github.com/laravel/framework/pull/21574))
 - Only accept strings in `Session::flash()` ([#21576](https://github.com/laravel/framework/pull/21576))
 - Use message from `AuthenticationException` in `Handler::unauthenticated()` ([#21575](https://github.com/laravel/framework/pull/21575))
+- Don't use global scope while touching parent timestamp ([#21604](https://github.com/laravel/framework/pull/21604))
+- Accept multiple middleware when defining middleware fluently ([#21621](https://github.com/laravel/framework/pull/21621))
+- Bind `true` as `1` while preparing an SQL statement ([#21623](https://github.com/laravel/framework/pull/21623))
+- Ensure config load order across multiple installations ([#21634](https://github.com/laravel/framework/pull/21634))
+- Pass previous exception to `AccessDeniedHttpException` and `HttpException` ([#21645](https://github.com/laravel/framework/pull/21645))
+- Unify Bootstrap preset ([#21686](https://github.com/laravel/framework/pull/21686), [#21685](https://github.com/laravel/framework/pull/21685))
+
+### Fixed
+- Reset table cell margins in mail theme ([#21647](https://github.com/laravel/framework/pull/21647))
+- Check for vendor views for each paths given in `config/view.php` ([#21636](https://github.com/laravel/framework/pull/21636))
+- Prevent negative offsets when paginating collection ([#21658](https://github.com/laravel/framework/pull/21658))
+- Flush all listeners of custom Eloquent events ([#21688](https://github.com/laravel/framework/pull/21688))
 
 
 ## v5.5.14 (2017-10-03)

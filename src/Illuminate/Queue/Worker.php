@@ -306,7 +306,7 @@ class Worker
     {
         try {
             // First we will raise the before job event and determine if the job has already ran
-            // over the its maximum attempt limit, which could primarily happen if the job is
+            // over its maximum attempt limits, which could primarily happen when this job is
             // continually timing out and not actually throwing any exceptions from itself.
             $this->raiseBeforeJobEvent($connectionName, $job);
 
@@ -392,7 +392,7 @@ class Worker
         }
 
         $this->failJob($connectionName, $job, $e = new MaxAttemptsExceededException(
-            'A queued job has been attempted too many times or run too long. The job may have previously timed out.'
+            $job->resolveName().' has been attempted too many times or run too long. The job may have previously timed out.'
         ));
 
         throw $e;
@@ -472,21 +472,6 @@ class Worker
     protected function raiseExceptionOccurredJobEvent($connectionName, $job, $e)
     {
         $this->events->dispatch(new Events\JobExceptionOccurred(
-            $connectionName, $job, $e
-        ));
-    }
-
-    /**
-     * Raise the failed queue job event.
-     *
-     * @param  string  $connectionName
-     * @param  \Illuminate\Contracts\Queue\Job  $job
-     * @param  \Exception  $e
-     * @return void
-     */
-    protected function raiseFailedJobEvent($connectionName, $job, $e)
-    {
-        $this->events->dispatch(new Events\JobFailed(
             $connectionName, $job, $e
         ));
     }
