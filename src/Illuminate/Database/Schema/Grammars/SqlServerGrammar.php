@@ -8,6 +8,13 @@ use Illuminate\Database\Schema\Blueprint;
 class SqlServerGrammar extends Grammar
 {
     /**
+     * If this Grammar supports schema changes wrapped in a transaction.
+     *
+     * @var bool
+     */
+    protected $transactions = true;
+
+    /**
      * The possible column modifiers.
      *
      * @var array
@@ -445,14 +452,18 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
-     * Create the column definition for an enum type.
+     * Create the column definition for an enumeration type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
      */
     protected function typeEnum(Fluent $column)
     {
-        return 'nvarchar(255)';
+        return sprintf(
+            'nvarchar(255) check ("%s" in (%s))',
+            $column->name,
+            $this->quoteString($column->allowed)
+        );
     }
 
     /**
@@ -511,7 +522,7 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
-     * Create the column definition for a date-time type.
+     * Create the column definition for a date-time (with time zone) type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
@@ -529,18 +540,18 @@ class SqlServerGrammar extends Grammar
      */
     protected function typeTime(Fluent $column)
     {
-        return 'time';
+        return $column->precision ? "time($column->precision)" : 'time';
     }
 
     /**
-     * Create the column definition for a time type.
+     * Create the column definition for a time (with time zone) type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
      */
     protected function typeTimeTz(Fluent $column)
     {
-        return 'time';
+        return $this->typeTime($column);
     }
 
     /**
@@ -551,17 +562,13 @@ class SqlServerGrammar extends Grammar
      */
     protected function typeTimestamp(Fluent $column)
     {
-        if ($column->useCurrent) {
-            return $column->precision
-                    ? "datetime2($column->precision) default CURRENT_TIMESTAMP"
-                    : 'datetime default CURRENT_TIMESTAMP';
-        }
+        $columnType = $column->precision ? "datetime2($column->precision)" : 'datetime';
 
-        return $column->precision ? "datetime2($column->precision)" : 'datetime';
+        return $column->useCurrent ? "$columnType default CURRENT_TIMESTAMP" : $columnType;
     }
 
     /**
-     * Create the column definition for a timestamp type.
+     * Create the column definition for a timestamp (with time zone) type.
      *
      * @link https://msdn.microsoft.com/en-us/library/bb630289(v=sql.120).aspx
      *
@@ -571,12 +578,23 @@ class SqlServerGrammar extends Grammar
     protected function typeTimestampTz(Fluent $column)
     {
         if ($column->useCurrent) {
-            return $column->precision
-                    ? "datetimeoffset($column->precision) default CURRENT_TIMESTAMP"
-                    : 'datetimeoffset default CURRENT_TIMESTAMP';
+            $columnType = $column->precision ? "datetimeoffset($column->precision)" : 'datetimeoffset';
+
+            return "$columnType default CURRENT_TIMESTAMP";
         }
 
         return "datetimeoffset($column->precision)";
+    }
+
+    /**
+     * Create the column definition for a year type.
+     *
+     * @param  \Illuminate\Support\Fluent  $column
+     * @return string
+     */
+    protected function typeYear(Fluent $column)
+    {
+        return $this->typeInteger($column);
     }
 
     /**
@@ -763,5 +781,20 @@ class SqlServerGrammar extends Grammar
         if (in_array($column->type, $this->serials) && $column->autoIncrement) {
             return ' identity primary key';
         }
+    }
+
+    /**
+     * Wrap a table in keyword identifiers.
+     *
+     * @param  \Illuminate\Database\Query\Expression|string  $table
+     * @return string
+     */
+    public function wrapTable($table)
+    {
+        if ($table instanceof Blueprint && $table->temporary) {
+            $this->setTablePrefix('#');
+        }
+
+        return parent::wrapTable($table);
     }
 }

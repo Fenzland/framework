@@ -37,7 +37,7 @@ class SlackWebhookChannel
      */
     public function send($notifiable, Notification $notification)
     {
-        if (! $url = $notifiable->routeNotificationFor('slack')) {
+        if (! $url = $notifiable->routeNotificationFor('slack', $notification)) {
             return;
         }
 
@@ -82,6 +82,9 @@ class SlackWebhookChannel
     {
         return collect($message->attachments)->map(function ($attachment) use ($message) {
             return array_filter([
+                'author_icon' => $attachment->authorIcon,
+                'author_link' => $attachment->authorLink,
+                'author_name' => $attachment->authorName,
                 'color' => $attachment->color ?: $message->color(),
                 'fallback' => $attachment->fallback,
                 'fields' => $this->fields($attachment),

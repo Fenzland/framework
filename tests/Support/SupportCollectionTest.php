@@ -45,6 +45,19 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals('default', $result);
     }
 
+    public function testFirstWhere()
+    {
+        $data = new Collection([
+            ['material' => 'paper', 'type' => 'book'],
+            ['material' => 'rubber', 'type' => 'gasket'],
+        ]);
+
+        $this->assertEquals('book', $data->firstWhere('material', 'paper')['type']);
+        $this->assertEquals('gasket', $data->firstWhere('material', 'rubber')['type']);
+        $this->assertNull($data->firstWhere('material', 'nonexistant'));
+        $this->assertNull($data->firstWhere('nonexistant', 'key'));
+    }
+
     public function testLastReturnsLastItemInCollection()
     {
         $c = new Collection(['foo', 'bar']);
@@ -123,10 +136,10 @@ class SupportCollectionTest extends TestCase
         $this->assertSame([false], $collection->all());
 
         $collection = new Collection(null);
-        $this->assertSame([], $collection->all());
+        $this->assertEmpty($collection->all());
 
         $collection = new Collection;
-        $this->assertSame([], $collection->all());
+        $this->assertEmpty($collection->all());
     }
 
     public function testGetArrayableItems()
@@ -402,10 +415,52 @@ class SupportCollectionTest extends TestCase
             $c->where('v', $object)->values()->all()
         );
 
+        $this->assertEquals(
+            [['v' => 1], ['v' => 2], ['v' => 3], ['v' => '3'], ['v' => 4]],
+            $c->where('v', '<>', $object)->values()->all()
+        );
+
+        $this->assertEquals(
+            [['v' => 1], ['v' => 2], ['v' => 3], ['v' => '3'], ['v' => 4]],
+            $c->where('v', '!=', $object)->values()->all()
+        );
+
+        $this->assertEquals(
+            [['v' => 1], ['v' => 2], ['v' => 3], ['v' => '3'], ['v' => 4]],
+            $c->where('v', '!==', $object)->values()->all()
+        );
+
+        $this->assertEquals(
+            [],
+            $c->where('v', '>', $object)->values()->all()
+        );
+
         $c = new Collection([['v' => 1], ['v' => $object]]);
         $this->assertEquals(
             [['v' => $object]],
             $c->where('v', $object)->values()->all()
+        );
+
+        $this->assertEquals(
+            [['v' => 1], ['v' => $object]],
+            $c->where('v', '<>', null)->values()->all()
+        );
+
+        $this->assertEquals(
+            [],
+            $c->where('v', '<', null)->values()->all()
+        );
+
+        $c = new Collection([['v' => 1], ['v' => new \Illuminate\Support\HtmlString('hello')]]);
+        $this->assertEquals(
+            [['v' => new \Illuminate\Support\HtmlString('hello')]],
+            $c->where('v', 'hello')->values()->all()
+        );
+
+        $c = new Collection([['v' => 1], ['v' => 'hello']]);
+        $this->assertEquals(
+            [['v' => 'hello']],
+            $c->where('v', new \Illuminate\Support\HtmlString('hello'))->values()->all()
         );
     }
 
@@ -918,9 +973,11 @@ class SupportCollectionTest extends TestCase
 
         $this->assertEquals(['first' => 'Taylor'], $data->except(['last', 'email', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->except('last', 'email', 'missing')->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->except(collect(['last' => 'Otwell', 'email' => 'taylorotwell@gmail.com', 'missing']))->all());
 
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(['last'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except('last')->all());
+        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(collect(['last' => 'Otwell']))->all());
     }
 
     public function testPluckWithArrayAndObjectValues()
@@ -1538,6 +1595,48 @@ class SupportCollectionTest extends TestCase
             ],
             'Role_3' => [
                 10 => ['user' => 1, 'roles' => ['Role_1', 'Role_3']],
+            ],
+        ];
+
+        $this->assertEquals($expected_result, $result->toArray());
+    }
+
+    public function testGroupByMultiLevelAndClosurePreservingKeys()
+    {
+        $data = new Collection([
+            10 => ['user' => 1, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_3']],
+            20 => ['user' => 2, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_2']],
+            30 => ['user' => 3, 'skilllevel' => 2, 'roles' => ['Role_1']],
+            40 => ['user' => 4, 'skilllevel' => 2, 'roles' => ['Role_2']],
+        ]);
+
+        $result = $data->groupBy([
+            'skilllevel',
+            function ($item) {
+                return $item['roles'];
+            },
+        ], true);
+
+        $expected_result = [
+            1 => [
+                'Role_1' => [
+                    10 => ['user' => 1, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_3']],
+                    20 => ['user' => 2, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_2']],
+                ],
+                'Role_3' => [
+                    10 => ['user' => 1, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_3']],
+                ],
+                'Role_2' => [
+                    20 => ['user' => 2, 'skilllevel' => 1, 'roles' => ['Role_1', 'Role_2']],
+                ],
+            ],
+            2 => [
+                'Role_1' => [
+                    30 => ['user' => 3, 'skilllevel' => 2, 'roles' => ['Role_1']],
+                ],
+                'Role_2' => [
+                    40 => ['user' => 4, 'skilllevel' => 2, 'roles' => ['Role_2']],
+                ],
             ],
         ];
 
@@ -2254,6 +2353,40 @@ class SupportCollectionTest extends TestCase
         $this->assertSame([['free' => false, 'title' => 'Premium']], $premium->values()->toArray());
     }
 
+    public function testPartitionWithOperators()
+    {
+        $collection = new Collection([
+            ['name' => 'Tim', 'age' => 17],
+            ['name' => 'Agatha', 'age' => 62],
+            ['name' => 'Kristina', 'age' => 33],
+            ['name' => 'Tim', 'age' => 41],
+        ]);
+
+        list($tims, $others) = $collection->partition('name', 'Tim');
+
+        $this->assertEquals($tims->values()->all(), [
+            ['name' => 'Tim', 'age' => 17],
+            ['name' => 'Tim', 'age' => 41],
+        ]);
+
+        $this->assertEquals($others->values()->all(), [
+            ['name' => 'Agatha', 'age' => 62],
+            ['name' => 'Kristina', 'age' => 33],
+        ]);
+
+        list($adults, $minors) = $collection->partition('age', '>=', 18);
+
+        $this->assertEquals($adults->values()->all(), [
+            ['name' => 'Agatha', 'age' => 62],
+            ['name' => 'Kristina', 'age' => 33],
+            ['name' => 'Tim', 'age' => 41],
+        ]);
+
+        $this->assertEquals($minors->values()->all(), [
+            ['name' => 'Tim', 'age' => 17],
+        ]);
+    }
+
     public function testPartitionPreservesKeys()
     {
         $courses = new Collection([
@@ -2306,8 +2439,8 @@ class SupportCollectionTest extends TestCase
     {
         $collection = new Collection(['michael', 'tom']);
 
-        $collection->when(true, function ($collection) {
-            return $collection->push('adam');
+        $collection->when('adam', function ($collection, $newName) {
+            return $collection->push($newName);
         });
 
         $this->assertSame(['michael', 'tom', 'adam'], $collection->toArray());
@@ -2364,6 +2497,27 @@ class SupportCollectionTest extends TestCase
         });
 
         $this->assertSame(['michael', 'tom', 'taylor'], $collection->toArray());
+    }
+
+    public function testGetNestedValue()
+    {
+        $collection = new Collection([
+            'foo' => [
+                'bar' => 'baz',
+                'books' => [
+                    'Book 1',
+                    'Book 2',
+                ],
+                'todos' => [
+                    'first' => 'Todo 1',
+                    'second' => 'Todo 2',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals('baz', $collection->get('foo.bar'));
+        $this->assertEquals('Book 1', $collection->get('foo.books.0'));
+        $this->assertEquals('Todo 2', $collection->get('foo.todos.second'));
     }
 }
 
