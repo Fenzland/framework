@@ -22,7 +22,7 @@ class DatabaseEloquentModelTest extends TestCase
 
     public function setup()
     {
-        parent::setup();
+        parent::setUp();
 
         Carbon::setTestNow(Carbon::now());
     }
@@ -202,6 +202,7 @@ class DatabaseEloquentModelTest extends TestCase
     public function testWithoutMethodRemovesEagerLoadedRelationshipCorrectly()
     {
         $model = new EloquentModelWithoutRelationStub;
+        $this->addMockConnection($model);
         $instance = $model->newInstance()->newQuery()->without('foo');
         $this->assertEmpty($instance->getEagerLoads());
     }
@@ -451,24 +452,6 @@ class DatabaseEloquentModelTest extends TestCase
 
         $value = '1429311541';
         $this->assertEquals('2015-04-17 22:59:01', $model->fromDateTime($value));
-    }
-
-    /**
-     * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage Call to undefined method Illuminate\Tests\Database\EloquentModelStub::badMethod()
-     */
-    public function testBadMethodCallException()
-    {
-        $conn = m::mock('Illuminate\Database\Connection');
-        $grammar = m::mock('Illuminate\Database\Query\Grammars\Grammar');
-        $processor = m::mock('Illuminate\Database\Query\Processors\Processor');
-        $conn->shouldReceive('getQueryGrammar')->once()->andReturn($grammar);
-        $conn->shouldReceive('getPostProcessor')->once()->andReturn($processor);
-        EloquentModelStub::setConnectionResolver($resolver = m::mock('Illuminate\Database\ConnectionResolverInterface'));
-        $resolver->shouldReceive('connection')->andReturn($conn);
-
-        $model = new EloquentModelStub;
-        $model->badMethod();
     }
 
     public function testInsertProcess()
@@ -881,6 +864,13 @@ class DatabaseEloquentModelTest extends TestCase
         $model->fill(['name' => 'foo', 'age' => 'bar']);
         $this->assertEquals('foo', $model->name);
         $this->assertEquals('bar', $model->age);
+    }
+
+    public function testQualifyColumn()
+    {
+        $model = new EloquentModelStub;
+
+        $this->assertEquals('stub.column', $model->qualifyColumn('column'));
     }
 
     public function testForceFillMethodFillsGuardedAttributes()
@@ -1849,6 +1839,16 @@ class EloquentModelSaveStub extends Model
     public function setIncrementing($value)
     {
         $this->incrementing = $value;
+    }
+
+    public function getConnection()
+    {
+        $mock = m::mock('Illuminate\Database\Connection');
+        $mock->shouldReceive('getQueryGrammar')->andReturn(m::mock('Illuminate\Database\Query\Grammars\Grammar'));
+        $mock->shouldReceive('getPostProcessor')->andReturn(m::mock('Illuminate\Database\Query\Processors\Processor'));
+        $mock->shouldReceive('getName')->andReturn('name');
+
+        return $mock;
     }
 }
 

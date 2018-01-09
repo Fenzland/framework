@@ -76,6 +76,13 @@ class BelongsToMany extends Relation
     protected $pivotWhereIns = [];
 
     /**
+     * Indicates if timestamps are available on the pivot table.
+     *
+     * @var bool
+     */
+    public $withTimestamps = false;
+
+    /**
      * The custom pivot table column for the created_at timestamp.
      *
      * @var string
@@ -879,6 +886,8 @@ class BelongsToMany extends Relation
      */
     public function withTimestamps($createdAt = null, $updatedAt = null)
     {
+        $this->withTimestamps = true;
+
         $this->pivotCreatedAt = $createdAt;
         $this->pivotUpdatedAt = $updatedAt;
 
@@ -906,6 +915,16 @@ class BelongsToMany extends Relation
     }
 
     /**
+     * Get the foreign key for the relation.
+     *
+     * @return string
+     */
+    public function getForeignPivotKeyName()
+    {
+        return $this->foreignPivotKey;
+    }
+
+    /**
      * Get the fully qualified foreign key for the relation.
      *
      * @return string
@@ -913,6 +932,16 @@ class BelongsToMany extends Relation
     public function getQualifiedForeignPivotKeyName()
     {
         return $this->table.'.'.$this->foreignPivotKey;
+    }
+
+    /**
+     * Get the "related key" for the relation.
+     *
+     * @return string
+     */
+    public function getRelatedPivotKeyName()
+    {
+        return $this->relatedPivotKey;
     }
 
     /**
@@ -932,7 +961,7 @@ class BelongsToMany extends Relation
      */
     public function getQualifiedParentKeyName()
     {
-        return $this->parent->getTable().'.'.$this->parentKey;
+        return $this->parent->qualifyColumn($this->parentKey);
     }
 
     /**
@@ -953,5 +982,15 @@ class BelongsToMany extends Relation
     public function getRelationName()
     {
         return $this->relationName;
+    }
+
+    /**
+     * Get the name of the pivot accessor for this relationship.
+     *
+     * @return string
+     */
+    public function getPivotAccessor()
+    {
+        return $this->accessor;
     }
 }

@@ -179,7 +179,7 @@ class Builder implements QueryBuilderInterface
      */
     public $operators = [
         '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
-        'like', 'like binary', 'not like', 'between', 'ilike',
+        'like', 'like binary', 'not like', 'ilike',
         '&', '|', '^', '<<', '>>',
         'rlike', 'regexp', 'not regexp',
         '~', '~*', '!~', '!~*', 'similar to',
@@ -481,7 +481,7 @@ class Builder implements QueryBuilderInterface
      * Add a basic where clause to the query.
      *
      * @param  string|array|\Closure  $column
-     * @param  string|null  $operator
+     * @param  mixed   $operator
      * @param  mixed   $value
      * @param  string  $boolean
      * @return $this
@@ -1108,7 +1108,9 @@ class Builder implements QueryBuilderInterface
     {
         $this->wheres[] = compact('column', 'type', 'boolean', 'operator', 'value');
 
-        $this->addBinding($value, 'where');
+        if (! $value instanceof Expression) {
+            $this->addBinding($value, 'where');
+        }
 
         return $this;
     }
@@ -1247,7 +1249,7 @@ class Builder implements QueryBuilderInterface
      * @param  bool  $not
      * @return $this
      */
-    public function addWhereExistsQuery(Builder $query, $boolean = 'and', $not = false)
+    public function addWhereExistsQuery(self $query, $boolean = 'and', $not = false)
     {
         $type = $not ? 'NotExists' : 'Exists';
 
@@ -1800,9 +1802,9 @@ class Builder implements QueryBuilderInterface
             return 0;
         } elseif (is_object($results[0])) {
             return (int) $results[0]->aggregate;
-        } else {
-            return (int) array_change_key_case((array) $results[0])['aggregate'];
         }
+
+        return (int) array_change_key_case((array) $results[0])['aggregate'];
     }
 
     /**
@@ -2253,7 +2255,9 @@ class Builder implements QueryBuilderInterface
         }
 
         return $this->connection->delete(
-            $this->grammar->compileDelete($this), $this->getBindings()
+            $this->grammar->compileDelete($this), $this->cleanBindings(
+                $this->grammar->prepareBindingsForDelete($this->bindings)
+            )
         );
     }
 
@@ -2370,7 +2374,7 @@ class Builder implements QueryBuilderInterface
      * @param  \Illuminate\Database\Query\Builder  $query
      * @return $this
      */
-    public function mergeBindings(Builder $query)
+    public function mergeBindings(self $query)
     {
         $this->bindings = array_merge_recursive($this->bindings, $query->bindings);
 
