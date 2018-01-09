@@ -17,6 +17,13 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphManyHasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyMorphManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphManyMorphManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyBelongsToThrough;
+use Illuminate\Database\Eloquent\Relations\MorphManyBelongsToThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyMorphToThrough;
+use Illuminate\Database\Eloquent\Relations\MorphManyMorphToThrough;
 use Illuminate\Database\Eloquent\Relations\ManyBelongsTo;
 use Illuminate\Database\Eloquent\Relations\ManyHasOne;
 use Illuminate\Database\Eloquent\Relations\ManyHasMany;
@@ -340,14 +347,17 @@ trait HasRelationships
     /**
      * Define a morph-many-through relationship.
      *
+     * @deprecated
+     *
      * @param  string  $related
      * @param  string  $through
      * @param  string  $name
+     * @param  string|null  $firstType
      * @param  string|null  $firstKey
      * @param  string|null  $secondKey
      * @param  string|null  $localKey
      * @param  string|null  $secondLocalKey
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\MorphManyThrough
      */
     public function morphManyThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
     {
@@ -364,6 +374,218 @@ trait HasRelationships
         $instance = $this->newRelatedInstance($related);
 
         return new MorphManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a morph-many-has-many-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $name
+     * @param  string|null  $firstType
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\MorphManyHasManyThrough
+     */
+    public function morphManyHasManyThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        list($firstType, $firstKey) = $this->getMorphs($name, $firstType, $firstKey);
+
+        $secondKey = $secondKey ?: $through->getForeignKey();
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $through->getKeyName();
+
+        $instance = $this->newRelatedInstance($related);
+
+        return new MorphManyHasManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a has-many-morph-many-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $name
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondType
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyMorphManyThrough
+     */
+    public function hasManyMorphManyThrough($related, $through, $name, $firstKey = null, $secondType = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        $firstKey = $firstKey ?: $this->getForeignKey();
+
+        list($secondType, $secondKey) = $through->getMorphs($name, $secondType, $secondKey);
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $through->getKeyName();
+
+        $instance = $this->newRelatedInstance($related);
+
+        return new HasManyMorphManyThrough($instance->newQuery(), $this, $through, $firstKey, $secondType, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a morph-many-morph-many-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $firstName
+     * @param  string  $secondName
+     * @param  string|null  $firstType
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondType
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\MorphManyMorphManyThrough
+     */
+    public function morphManyMorphManyThrough($related, $through, $firstName, $secondName, $firstType = null, $firstKey = null, $secondType = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        list($firstType, $firstKey) = $this->getMorphs($firstName, $firstType, $firstKey);
+
+        list($secondType, $secondKey) = $through->getMorphs($secondName, $secondType, $secondKey);
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $through->getKeyName();
+
+        $instance = $this->newRelatedInstance($related);
+
+        return new MorphManyMorphManyThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondType, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a has-many-belongs-to-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyPelongsToThrough
+     */
+    public function hasManyBelongsToThrough($related, $through, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        $instance = $this->newRelatedInstance($related);
+
+        $firstKey = $firstKey ?: $this->getForeignKey();
+
+        $secondKey = $secondKey ?: $instance->getForeignKey();
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $instance->getKeyName();
+
+        return new HasManyBelongsToThrough($instance->newQuery(), $this, $through, $firstKey, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a morph-many-belongs-to-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $name
+     * @param  string|null  $firstType
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\MorphManyBelongsToThrough
+     */
+    public function morphManyBelongsToThrough($related, $through, $name, $firstType = null, $firstKey = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        $instance = $this->newRelatedInstance($related);
+
+        list($firstType, $firstKey) = $this->getMorphs($name, $firstType, $firstKey);
+
+        $secondKey = $secondKey ?: $instance->getForeignKey();
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $instance->getKeyName();
+
+        return new MorphManyBelongsToThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a has-many-morph-to-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $name
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondType
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyMorphToThrough
+     */
+    public function hasManyMorphToThrough($related, $through, $name, $firstKey = null, $secondType = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        $instance = $this->newRelatedInstance($related);
+
+        $firstKey = $firstKey ?: $this->getForeignKey();
+
+        list($secondType, $secondKey) = $through->getMorphs($name, $secondType, $secondKey);
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $instance->getKeyName();
+
+        return new HasManyMorphToThrough($instance->newQuery(), $this, $through, $firstKey, $secondType, $secondKey, $localKey, $secondLocalKey);
+    }
+
+    /**
+     * Define a morph-many-morph-to-through relationship.
+     *
+     * @param  string  $related
+     * @param  string  $through
+     * @param  string  $firstName
+     * @param  string  $secondName
+     * @param  string|null  $firstType
+     * @param  string|null  $firstKey
+     * @param  string|null  $secondType
+     * @param  string|null  $secondKey
+     * @param  string|null  $localKey
+     * @param  string|null  $secondLocalKey
+     * @return \Illuminate\Database\Eloquent\Relations\MorphManyMorphToThrough
+     */
+    public function morphManyMorphToThrough($related, $through, $firstName, $secondName, $firstType = null, $firstKey = null, $secondType = null, $secondKey = null, $localKey = null, $secondLocalKey = null)
+    {
+        $through = new $through;
+
+        $instance = $this->newRelatedInstance($related);
+
+        list($firstType, $firstKey) = $this->getMorphs($firstName, $firstType, $firstKey);
+
+        list($secondType, $secondKey) = $through->getMorphs($secondName, $secondType, $secondKey);
+
+        $localKey = $localKey ?: $this->getKeyName();
+
+        $secondLocalKey = $secondLocalKey ?: $instance->getKeyName();
+
+        return new MorphManyMorphToThrough($instance->newQuery(), $this, $through, $firstType, $firstKey, $secondType, $secondKey, $localKey, $secondLocalKey);
     }
 
     /**
