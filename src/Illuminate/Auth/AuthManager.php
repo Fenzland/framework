@@ -154,7 +154,8 @@ class AuthManager implements FactoryContract
         // user in the database or another persistence layer where users are.
         $guard = new TokenGuard(
             $this->createUserProvider($config['provider'] ?? null),
-            $this->app['request']
+            $this->app['request'],
+            $config
         );
 
         $this->app->refresh('request', $guard, 'setRequest');

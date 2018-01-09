@@ -46,6 +46,18 @@ class MySqlGrammar extends Grammar
     }
 
     /**
+     * Helper for whereSetContains
+     *
+     * @param  string  $value
+     * @param  string  $column
+     * @return string
+     */
+    protected function findInSet($value, $column)
+    {
+        return "FIND_IN_SET($value, $column)";
+    }
+
+    /**
      * Compile a single union statement.
      *
      * @param  array  $union

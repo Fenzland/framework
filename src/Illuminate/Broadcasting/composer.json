@@ -16,10 +16,10 @@
     "require": {
         "php": ">=7.0",
         "psr/log": "~1.0",
-        "illuminate/bus": "5.5.*",
-        "illuminate/contracts": "5.5.*",
-        "illuminate/queue": "5.5.*",
-        "illuminate/support": "5.5.*"
+        "illuminate/bus": "5.5.*.*",
+        "illuminate/contracts": "5.5.*.*",
+        "illuminate/queue": "5.5.*.*",
+        "illuminate/support": "5.5.*.*"
     },
     "autoload": {
         "psr-4": {
