@@ -103,11 +103,15 @@ class ManyBelongsTo extends Relation
             return new Collection($this->getDefaultFor($this->parent));
         }
 
+        $parentChain = $this->child->{$this->foreignKeys};
+
+        $parentChain = $parentChain ? explode(',', $parentChain) : [];
+
         return new Collection(array_map(function ($key) use ($results) {
 
             return $results->get($key, null);
 
-        }, explode(',', $this->child->{$this->foreignKeys})));
+        }, $parentChain));
     }
 
     /**
