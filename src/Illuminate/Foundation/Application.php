@@ -299,7 +299,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get the path to the application "app" directory.
      *
-     * @param string $path Optionally, a path to append to the app path
+     * @param  string  $path Optionally, a path to append to the app path
      * @return string
      */
     public function path($path = '')
@@ -310,7 +310,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get the base path of the Laravel installation.
      *
-     * @param string $path Optionally, a path to append to the base path
+     * @param  string  $path Optionally, a path to append to the base path
      * @return string
      */
     public function basePath($path = '')
@@ -321,7 +321,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get the path to the bootstrap directory.
      *
-     * @param string $path Optionally, a path to append to the bootstrap path
+     * @param  string  $path Optionally, a path to append to the bootstrap path
      * @return string
      */
     public function bootstrapPath($path = '')
@@ -332,7 +332,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get the path to the application configuration files.
      *
-     * @param string $path Optionally, a path to append to the config path
+     * @param  string  $path Optionally, a path to append to the config path
      * @return string
      */
     public function configPath($path = '')
@@ -343,7 +343,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get the path to the database directory.
      *
-     * @param string $path Optionally, a path to append to the database path
+     * @param  string  $path Optionally, a path to append to the database path
      * @return string
      */
     public function databasePath($path = '')
@@ -586,6 +586,21 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             $provider->register();
         }
 
+        // If there are bindings / singletons set as properties on the provider we
+        // will spin through them and register them with the application, which
+        // serves as a convenience layer while registering a lot of bindings.
+        if (property_exists($provider, 'bindings')) {
+            foreach ($provider->bindings as $key => $value) {
+                $this->bind($key, $value);
+            }
+        }
+
+        if (property_exists($provider, 'singletons')) {
+            foreach ($provider->singletons as $key => $value) {
+                $this->singleton($key, $value);
+            }
+        }
+
         $this->markAsRegistered($provider);
 
         // If the application has already booted, we will call this boot method on
@@ -606,9 +621,20 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function getProvider($provider)
     {
+        return array_values($this->getProviders($provider))[0] ?? null;
+    }
+
+    /**
+     * Get the registered service provider instances if any exist.
+     *
+     * @param  \Illuminate\Support\ServiceProvider|string  $provider
+     * @return array
+     */
+    public function getProviders($provider)
+    {
         $name = is_string($provider) ? $provider : get_class($provider);
 
-        return Arr::first($this->serviceProviders, function ($value) use ($name) {
+        return Arr::where($this->serviceProviders, function ($value) use ($name) {
             return $value instanceof $name;
         });
     }
@@ -1111,9 +1137,9 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             'filesystem'           => [\Illuminate\Filesystem\FilesystemManager::class, \Illuminate\Contracts\Filesystem\Factory::class],
             'filesystem.disk'      => [\Illuminate\Contracts\Filesystem\Filesystem::class],
             'filesystem.cloud'     => [\Illuminate\Contracts\Filesystem\Cloud::class],
-            'hash'                 => [\Illuminate\Contracts\Hashing\Hasher::class],
+            'hash'                 => [\Illuminate\Hashing\HashManager::class],
             'translator'           => [\Illuminate\Translation\Translator::class, \Illuminate\Contracts\Translation\Translator::class],
-            'log'                  => [\Illuminate\Log\Writer::class, \Illuminate\Contracts\Logging\Log::class, \Psr\Log\LoggerInterface::class],
+            'log'                  => [\Illuminate\Log\LogManager::class, \Psr\Log\LoggerInterface::class],
             'mailer'               => [\Illuminate\Mail\Mailer::class, \Illuminate\Contracts\Mail\Mailer::class, \Illuminate\Contracts\Mail\MailQueue::class],
             'auth.password'        => [\Illuminate\Auth\Passwords\PasswordBrokerManager::class, \Illuminate\Contracts\Auth\PasswordBrokerFactory::class],
             'auth.password.broker' => [\Illuminate\Auth\Passwords\PasswordBroker::class, \Illuminate\Contracts\Auth\PasswordBroker::class],

@@ -230,7 +230,9 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
             if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
             } elseif ($totallyGuarded) {
-                throw new MassAssignmentException($key);
+                throw new MassAssignmentException(
+                    "Add [{$key}] to fillable property to allow mass assignment."
+                );
             }
         }
 
@@ -248,6 +250,21 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
         return static::unguarded(function () use ($attributes) {
             return $this->fill($attributes);
         });
+    }
+
+    /**
+     * Qualify the given column name by the model's table.
+     *
+     * @param  string  $column
+     * @return string
+     */
+    public function qualifyColumn($column)
+    {
+        if (Str::contains($column, '.')) {
+            return $column;
+        }
+
+        return $this->getTable().'.'.$column;
     }
 
     /**
@@ -880,6 +897,19 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
     }
 
     /**
+     * Get a new query to restore one or more models by their queueable IDs.
+     *
+     * @param  array|int  $ids
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newQueryForRestoration($ids)
+    {
+        return is_array($ids)
+                ? $this->newQueryWithoutScopes()->whereIn($this->getQualifiedKeyName(), $ids)
+                : $this->newQueryWithoutScopes()->whereKey($ids);
+    }
+
+    /**
      * Create a new Eloquent query builder for the model.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
@@ -1143,7 +1173,9 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
     public function getTable()
     {
         if (! isset($this->table)) {
-            return str_replace('\\', '', Str::snake(Str::plural(class_basename($this))));
+            return str_replace(
+                '\\', '', Str::snake(Str::plural(class_basename($this)))
+            );
         }
 
         return $this->table;
@@ -1192,7 +1224,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     public function getQualifiedKeyName()
     {
-        return $this->getTable().'.'.$this->getKeyName();
+        return $this->qualifyColumn($this->getKeyName());
     }
 
     /**

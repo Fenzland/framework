@@ -124,7 +124,7 @@ class SupportHelpersTest extends TestCase
     {
         $array = ['name' => 'taylor', 'age' => 26];
         $this->assertEquals(['name' => 'taylor'], Arr::only($array, ['name']));
-        $this->assertSame([], Arr::only($array, ['nonExistingKey']));
+        $this->assertEmpty(Arr::only($array, ['nonExistingKey']));
     }
 
     public function testArrayCollapse()
@@ -699,20 +699,30 @@ class SupportHelpersTest extends TestCase
 
     public function testClassUsesRecursiveShouldReturnTraitsOnParentClasses()
     {
-        $this->assertEquals([
-            'Illuminate\Tests\Support\SupportTestTraitOne' => 'Illuminate\Tests\Support\SupportTestTraitOne',
+        $this->assertSame([
             'Illuminate\Tests\Support\SupportTestTraitTwo' => 'Illuminate\Tests\Support\SupportTestTraitTwo',
+            'Illuminate\Tests\Support\SupportTestTraitOne' => 'Illuminate\Tests\Support\SupportTestTraitOne',
         ],
         class_uses_recursive('Illuminate\Tests\Support\SupportTestClassTwo'));
     }
 
     public function testClassUsesRecursiveAcceptsObject()
     {
-        $this->assertEquals([
-            'Illuminate\Tests\Support\SupportTestTraitOne' => 'Illuminate\Tests\Support\SupportTestTraitOne',
+        $this->assertSame([
             'Illuminate\Tests\Support\SupportTestTraitTwo' => 'Illuminate\Tests\Support\SupportTestTraitTwo',
+            'Illuminate\Tests\Support\SupportTestTraitOne' => 'Illuminate\Tests\Support\SupportTestTraitOne',
         ],
         class_uses_recursive(new SupportTestClassTwo));
+    }
+
+    public function testClassUsesRecursiveReturnParentTraitsFirst()
+    {
+        $this->assertSame([
+            'Illuminate\Tests\Support\SupportTestTraitTwo' => 'Illuminate\Tests\Support\SupportTestTraitTwo',
+            'Illuminate\Tests\Support\SupportTestTraitOne' => 'Illuminate\Tests\Support\SupportTestTraitOne',
+            'Illuminate\Tests\Support\SupportTestTraitThree' => 'Illuminate\Tests\Support\SupportTestTraitThree',
+        ],
+        class_uses_recursive(SupportTestClassThree::class));
     }
 
     public function testArrayAdd()
@@ -748,6 +758,11 @@ class SupportHelpersTest extends TestCase
         throw_if(true, new RuntimeException);
     }
 
+    public function testThrowReturnIfNotThrown()
+    {
+        $this->assertSame('foo', throw_unless('foo', new RuntimeException));
+    }
+
     /**
      * @expectedException \RuntimeException
      * @expectedExceptionMessage Test Message
@@ -767,6 +782,13 @@ class SupportHelpersTest extends TestCase
                 return 10;
             }
         })->something());
+    }
+
+    public function testOptionalWithArray()
+    {
+        $this->assertNull(optional(null)['missing']);
+
+        $this->assertEquals('here', optional(['present' => 'here'])['present']);
     }
 
     public function testOptionalIsMacroable()
@@ -831,6 +853,15 @@ class SupportTestClassOne
 
 class SupportTestClassTwo extends SupportTestClassOne
 {
+}
+
+trait SupportTestTraitThree
+{
+}
+
+class SupportTestClassThree extends SupportTestClassTwo
+{
+    use SupportTestTraitThree;
 }
 
 class SupportTestArrayAccess implements ArrayAccess

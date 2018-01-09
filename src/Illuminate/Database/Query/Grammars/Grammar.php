@@ -152,7 +152,7 @@ class Grammar extends BaseGrammar
      */
     protected function compileJoins(Builder $query, $joins)
     {
-        return collect($joins)->map(function ($join) use ($query) {
+        return collect($joins)->map(function ($join) {
             $table = $this->wrapTable($join->table);
 
             return trim("{$join->type} join {$table} {$this->compileWheres($join)}");
@@ -508,6 +508,20 @@ class Grammar extends BaseGrammar
     }
 
     /**
+     * Compile a where row values condition.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereRowValues(Builder $query, $where)
+    {
+        $values = $this->parameterize($where['values']);
+
+        return '('.implode(', ', $where['columns']).') '.$where['operator'].' ('.$values.')';
+    }
+
+    /**
      * Compile the "group by" portions of the query.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
@@ -585,7 +599,7 @@ class Grammar extends BaseGrammar
     /**
      * Compile the query orders to an array.
      *
-     * @param  \Illuminate\Database\Query\Builder
+     * @param  \Illuminate\Database\Query\Builder  $query
      * @param  array  $orders
      * @return array
      */
@@ -793,6 +807,17 @@ class Grammar extends BaseGrammar
         $wheres = is_array($query->wheres) ? $this->compileWheres($query) : '';
 
         return trim("delete from {$this->wrapTable($query->from)} $wheres");
+    }
+
+    /**
+     * Prepare the bindings for a delete statement.
+     *
+     * @param  array  $bindings
+     * @return array
+     */
+    public function prepareBindingsForDelete(array $bindings)
+    {
+        return Arr::flatten($bindings);
     }
 
     /**

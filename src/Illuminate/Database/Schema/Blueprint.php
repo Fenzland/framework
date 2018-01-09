@@ -3,9 +3,11 @@
 namespace Illuminate\Database\Schema;
 
 use Closure;
+use BadMethodCallException;
 use Illuminate\Support\Fluent;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Database\Schema\Grammars\Grammar;
 
 class Blueprint
@@ -103,6 +105,8 @@ class Blueprint
         // Each type of command has a corresponding compiler function on the schema
         // grammar which is used to build the necessary SQL statements to build
         // the blueprint element, so we'll just call that compilers function.
+        $this->ensureCommandsAreValid($connection);
+
         foreach ($this->commands as $command) {
             $method = 'compile'.ucfirst($command->name);
 
@@ -114,6 +118,35 @@ class Blueprint
         }
 
         return $statements;
+    }
+
+    /**
+     * Ensure the commands on the blueprint are valid for the connection type.
+     *
+     * @param  \Illuminate\Database\Connection  $connection
+     * @return void
+     */
+    protected function ensureCommandsAreValid(Connection $connection)
+    {
+        if ($connection instanceof SQLiteConnection &&
+            $this->commandsNamed(['dropColumn', 'renameColumn'])->count() > 1) {
+            throw new BadMethodCallException(
+                "SQLite doesn't support multiple calls to dropColumn / renameColumn in a single modification."
+            );
+        }
+    }
+
+    /**
+     * Get all of the commands matching the given names.
+     *
+     * @param  array  $names
+     * @return \Illuminate\Support\Collection
+     */
+    protected function commandsNamed(array $names)
+    {
+        return collect($this->commands)->filter(function ($command) use ($names) {
+            return in_array($command->name, $names);
+        });
     }
 
     /**
@@ -851,11 +884,12 @@ class Blueprint
      * Create a new time column (with time zone) on the table.
      *
      * @param  string  $column
+     * @param  int  $precision
      * @return \Illuminate\Support\Fluent
      */
-    public function timeTz($column)
+    public function timeTz($column, $precision = 0)
     {
-        return $this->addColumn('timeTz', $column);
+        return $this->addColumn('timeTz', $column, compact('precision'));
     }
 
     /**
@@ -942,6 +976,17 @@ class Blueprint
     public function softDeletesTz($precision = 0)
     {
         return $this->timestampTz('deleted_at', $precision)->nullable();
+    }
+
+    /**
+     * Create a new year column on the table.
+     *
+     * @param  string  $column
+     * @return \Illuminate\Support\Fluent
+     */
+    public function year($column)
+    {
+        return $this->addColumn('year', $column);
     }
 
     /**

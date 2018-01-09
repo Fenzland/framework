@@ -5,6 +5,7 @@ namespace Illuminate\Tests\Redis;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Redis\Limiters\DurationLimiter;
 use Illuminate\Contracts\Redis\LimiterTimeoutException;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithRedis;
 
 /**
  * @group redislimiters
@@ -15,7 +16,7 @@ class DurationLimiterTest extends TestCase
 
     public function setup()
     {
-        parent::setup();
+        parent::setUp();
 
         $this->setUpRedis();
     }

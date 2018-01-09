@@ -149,9 +149,9 @@ if (! function_exists('auth')) {
     {
         if (is_null($guard)) {
             return app(AuthFactory::class);
-        } else {
-            return app(AuthFactory::class)->guard($guard);
         }
+
+        return app(AuthFactory::class)->guard($guard);
     }
 }
 
@@ -185,15 +185,15 @@ if (! function_exists('base_path')) {
 
 if (! function_exists('bcrypt')) {
     /**
-     * Hash the given value.
+     * Hash the given value against the bcrypt algorithm.
      *
      * @param  string  $value
-     * @param  array   $options
+     * @param  array  $options
      * @return string
      */
     function bcrypt($value, $options = [])
     {
-        return app('hash')->make($value, $options);
+        return app('hash')->driver('bcrypt')->make($value, $options);
     }
 }
 
@@ -483,9 +483,9 @@ if (! function_exists('factory')) {
             return $factory->of($arguments[0], $arguments[1])->times($arguments[2] ?? null);
         } elseif (isset($arguments[1])) {
             return $factory->of($arguments[0])->times($arguments[1]);
-        } else {
-            return $factory->of($arguments[0]);
         }
+
+        return $factory->of($arguments[0]);
     }
 }
 
@@ -509,7 +509,7 @@ if (! function_exists('logger')) {
      *
      * @param  string  $message
      * @param  array  $context
-     * @return \Illuminate\Contracts\Logging\Log|null
+     * @return \Illuminate\Log\LogManager|null
      */
     function logger($message = null, array $context = [])
     {
@@ -518,6 +518,19 @@ if (! function_exists('logger')) {
         }
 
         return app('log')->debug($message, $context);
+    }
+}
+
+if (! function_exists('logs')) {
+    /**
+     * Get a log driver instance.
+     *
+     * @param  string  $driver
+     * @return \Illuminate\Log\LogManager|\Psr\Log\LoggerInterface
+     */
+    function logs($driver = null)
+    {
+        return $driver ? app('log')->driver($driver) : app('log');
     }
 }
 

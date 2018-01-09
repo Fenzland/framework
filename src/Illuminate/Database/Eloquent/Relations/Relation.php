@@ -53,7 +53,7 @@ abstract class Relation implements QueryBuilderInterface
      *
      * @var array
      */
-    protected static $morphMap = [];
+    public static $morphMap = [];
 
     /**
      * Create a new relation instance.
@@ -348,8 +348,8 @@ abstract class Relation implements QueryBuilderInterface
     public static function getMorphedModel($alias)
     {
         return array_key_exists($alias, self::$morphMap)
-            ? self::$morphMap[$alias]
-            : null;
+                        ? self::$morphMap[$alias]
+                        : null;
     }
 
     /**

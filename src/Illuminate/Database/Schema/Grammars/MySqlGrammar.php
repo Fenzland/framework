@@ -563,14 +563,14 @@ class MySqlGrammar extends Grammar
     }
 
     /**
-     * Create the column definition for an enum type.
+     * Create the column definition for an enumeration type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
      */
     protected function typeEnum(Fluent $column)
     {
-        return "enum('".implode("', '", $column->allowed)."')";
+        return sprintf('enum(%s)', $this->quoteString($column->allowed));
     }
 
     /**
@@ -629,7 +629,7 @@ class MySqlGrammar extends Grammar
     }
 
     /**
-     * Create the column definition for a date-time type.
+     * Create the column definition for a date-time (with time zone) type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
@@ -647,18 +647,18 @@ class MySqlGrammar extends Grammar
      */
     protected function typeTime(Fluent $column)
     {
-        return 'time';
+        return $column->precision ? "time($column->precision)" : 'time';
     }
 
     /**
-     * Create the column definition for a time type.
+     * Create the column definition for a time (with time zone) type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
      */
     protected function typeTimeTz(Fluent $column)
     {
-        return 'time';
+        return $this->typeTime($column);
     }
 
     /**
@@ -669,17 +669,13 @@ class MySqlGrammar extends Grammar
      */
     protected function typeTimestamp(Fluent $column)
     {
-        if ($column->useCurrent) {
-            return $column->precision
-                    ? "timestamp($column->precision) default CURRENT_TIMESTAMP"
-                    : 'timestamp default CURRENT_TIMESTAMP';
-        }
+        $columnType = $column->precision ? "timestamp($column->precision)" : 'timestamp';
 
-        return $column->precision ? "timestamp($column->precision)" : 'timestamp';
+        return $column->useCurrent ? "$columnType default CURRENT_TIMESTAMP" : $columnType;
     }
 
     /**
-     * Create the column definition for a timestamp type.
+     * Create the column definition for a timestamp (with time zone) type.
      *
      * @param  \Illuminate\Support\Fluent  $column
      * @return string
@@ -687,6 +683,17 @@ class MySqlGrammar extends Grammar
     protected function typeTimestampTz(Fluent $column)
     {
         return $this->typeTimestamp($column);
+    }
+
+    /**
+     * Create the column definition for a year type.
+     *
+     * @param  \Illuminate\Support\Fluent  $column
+     * @return string
+     */
+    protected function typeYear(Fluent $column)
+    {
+        return 'year';
     }
 
     /**
