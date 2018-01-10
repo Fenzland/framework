@@ -1,5 +1,5 @@
 {
-    "name": "laravel/framework",
+    "name": "fenzland/laravel",
     "description": "The Laravel Framework.",
     "keywords": ["framework", "laravel"],
     "license": "MIT",
@@ -12,6 +12,10 @@
         {
             "name": "Taylor Otwell",
             "email": "taylor@laravel.com"
+        },
+        {
+            "name": "Fenz",
+            "email": "uukoo@163.com"
         }
     ],
     "require": {
