@@ -222,6 +222,17 @@ trait InteractsWithPivotTable
     }
 
     /**
+     * Attach a model or models to the parent without repeat.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection|array  $ids
+     * @return array
+     */
+    public function attachOnce($ids)
+    {
+        return $this->syncWithoutDetaching($ids);
+    }
+
+    /**
      * Create an array of records to insert into the pivot table.
      *
      * @param  array  $ids
