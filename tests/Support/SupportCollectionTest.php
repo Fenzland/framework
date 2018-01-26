@@ -3,6 +3,7 @@
 namespace Illuminate\Tests\Support;
 
 use stdClass;
+use Exception;
 use ArrayAccess;
 use Mockery as m;
 use ReflectionClass;
@@ -140,6 +141,16 @@ class SupportCollectionTest extends TestCase
 
         $collection = new Collection;
         $this->assertEmpty($collection->all());
+    }
+
+    public function testCollectionShuffleWithSeed()
+    {
+        $collection = new Collection((range(0, 100, 10)));
+
+        $firstRandom = $collection->shuffle(1234);
+        $secondRandom = $collection->shuffle(1234);
+
+        $this->assertEquals($firstRandom, $secondRandom);
     }
 
     public function testGetArrayableItems()
@@ -328,6 +339,16 @@ class SupportCollectionTest extends TestCase
         ]);
 
         $this->assertEquals(['id1' => 'first', 'id2' => 'second'], $c->keyBy->id->map->name->all());
+    }
+
+    public function testHigherOrderUnique()
+    {
+        $c = new Collection([
+            ['id' => '1', 'name' => 'first'],
+            ['id' => '1', 'name' => 'second'],
+        ]);
+
+        $this->assertCount(1, $c->unique->id);
     }
 
     public function testHigherOrderFilter()
@@ -973,11 +994,10 @@ class SupportCollectionTest extends TestCase
 
         $this->assertEquals(['first' => 'Taylor'], $data->except(['last', 'email', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->except('last', 'email', 'missing')->all());
-        $this->assertEquals(['first' => 'Taylor'], $data->except(collect(['last' => 'Otwell', 'email' => 'taylorotwell@gmail.com', 'missing']))->all());
 
+        $this->assertEquals(['first' => 'Taylor'], $data->except(collect(['last', 'email', 'missing']))->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(['last'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except('last')->all());
-        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(collect(['last' => 'Otwell']))->all());
     }
 
     public function testPluckWithArrayAndObjectValues()
@@ -1970,9 +1990,11 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->only(null)->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only(['first', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only('first', 'missing')->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->only(collect(['first', 'missing']))->all());
 
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(['first', 'email'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only('first', 'email')->all());
+        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(collect(['first', 'email']))->all());
     }
 
     public function testGettingAvgItemsFromCollection()
@@ -2499,25 +2521,39 @@ class SupportCollectionTest extends TestCase
         $this->assertSame(['michael', 'tom', 'taylor'], $collection->toArray());
     }
 
-    public function testGetNestedValue()
+    public function testHasReturnsValidResults()
     {
-        $collection = new Collection([
-            'foo' => [
-                'bar' => 'baz',
-                'books' => [
-                    'Book 1',
-                    'Book 2',
-                ],
-                'todos' => [
-                    'first' => 'Todo 1',
-                    'second' => 'Todo 2',
-                ],
-            ],
-        ]);
+        $collection = new Collection(['foo' => 'one', 'bar' => 'two', 1 => 'three']);
+        $this->assertTrue($collection->has('foo'));
+        $this->assertTrue($collection->has('foo', 'bar', 1));
+        $this->assertFalse($collection->has('foo', 'bar', 1, 'baz'));
+        $this->assertFalse($collection->has('baz'));
+    }
 
-        $this->assertEquals('baz', $collection->get('foo.bar'));
-        $this->assertEquals('Book 1', $collection->get('foo.books.0'));
-        $this->assertEquals('Todo 2', $collection->get('foo.todos.second'));
+    public function testPutAddsItemToCollection()
+    {
+        $collection = new Collection();
+        $this->assertSame([], $collection->toArray());
+        $collection->put('foo', 1);
+        $this->assertSame(['foo' => 1], $collection->toArray());
+        $collection->put('bar', ['nested' => 'two']);
+        $this->assertSame(['foo' => 1, 'bar' => ['nested' => 'two']], $collection->toArray());
+        $collection->put('foo', 3);
+        $this->assertSame(['foo' => 3, 'bar' => ['nested' => 'two']], $collection->toArray());
+    }
+
+    public function testItThrowsExceptionWhenTryingToAccessNoProxyProperty()
+    {
+        $collection = new Collection();
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Property [foo] does not exist on this collection instance.');
+        $collection->foo;
+    }
+
+    public function testGetWithNullReturnsNull()
+    {
+        $collection = new Collection([1, 2, 3]);
+        $this->assertNull($collection->get(null));
     }
 }
 

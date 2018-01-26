@@ -304,7 +304,7 @@ class RoutingRouteTest extends TestCase
             return 'foo';
         })->name('foo');
 
-        $this->assertTrue(is_array($route->getAction()));
+        $this->assertInternalType('array', $route->getAction());
         $this->assertArrayHasKey('as', $route->getAction());
         $this->assertEquals('foo', $route->getAction('as'));
         $this->assertNull($route->getAction('unknown_property'));
@@ -526,7 +526,6 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     * @expectedExceptionMessage
      */
     public function testRoutesDontMatchNonMatchingPathsWithLeadingOptionals()
     {
@@ -539,7 +538,6 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     * @expectedExceptionMessage
      */
     public function testRoutesDontMatchNonMatchingDomain()
     {
@@ -1368,7 +1366,6 @@ class RoutingRouteTest extends TestCase
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
-     * @expectedExceptionMessage
      */
     public function testImplicitBindingsWithOptionalParameterWithNonExistingKeyInUri()
     {

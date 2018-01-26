@@ -1,22 +1,60 @@
 # Release Notes for 5.5.x
 
-## [Unreleased]
+## v5.5.32 (2018-01-18)
+
+### Fixed
+- Reverted `Collection::get()` changes [#22554](https://github.com/laravel/framework/pull/22554) ([6197e56](https://github.com/laravel/framework/commit/6197e563fab8511ce8bf9a006444fee26f015d3a), [af36f26](https://github.com/laravel/framework/commit/af36f26dad805a8d866555c979e92a9e0e1fa8ea))
+
+
+## v5.5.31 (2018-01-16)
+
+### Fixed
+- Reverted [#22804](https://github.com/laravel/framework/pull/22804) ([d8a8368](https://github.com/laravel/framework/commit/d8a8368e15e73de50b91b903f6b933c7d05b0e28), [f34926c](https://github.com/laravel/framework/commit/f34926c52ba282ff67f4be3e9afc8d0ddc885c3f))
+
+
+## v5.5.30 (2018-01-16)
+
+### Changed
+- Accept collection of keys on `Collection::only()` ([#22804](https://github.com/laravel/framework/pull/22804))
+
+### Fixed
+- Reverted [#22649](https://github.com/laravel/framework/pull/22649) ([#22815](https://github.com/laravel/framework/pull/22815))
+- Send status code `500` when using `Collection::dd()` ([#22803](https://github.com/laravel/framework/pull/22803))
+
+
+## v5.5.29 (2018-01-15)
 
 ### Added
 - Added `Model::qualifyColumn()` method ([#22577](https://github.com/laravel/framework/pull/22577))
 - Added support for the `author_*` fields to `SlackAttachment` ([#22610](https://github.com/laravel/framework/pull/22610))
 - Added `UrlGenerator::getDefaultParameters()` method  ([#22572](https://github.com/laravel/framework/pull/22572))
+- Added option to double encode escaped strings ([61f8477](https://github.com/laravel/framework/commit/61f8477fab55a258f39a3d598f67f7cc0ffd6aca))
+- Added `BladeCompiler::doubleEncode()` method ([1cc96a1](https://github.com/laravel/framework/commit/1cc96a120955bc0d901f59dff7be1b99133fc7a1))
+- Added support for nested keys to `TestResponse::assertJsonCount()` ([#22740](https://github.com/laravel/framework/pull/22740))
+- Added `s3://` to protocol to URL validation ([#22752](https://github.com/laravel/framework/pull/22752))
+- Added option to disable wrapping migrations in transaction ([#22757](https://github.com/laravel/framework/pull/22757))
 
 ### Changed
 - Use `Arr::get()` in `Collection::get()` ([#22554](https://github.com/laravel/framework/pull/22554))
 - Pass entire config to `FtpAdapter` ([#22539](https://github.com/laravel/framework/pull/22539))
 - Support extending Eloquent relationships ([#22617](https://github.com/laravel/framework/pull/22617))
-- Changed handling of `VerifyCsrfToken::$except` ([#22619](https://github.com/laravel/framework/pull/22619))
+- Improved handling of `VerifyCsrfToken::$except` values ([#22619](https://github.com/laravel/framework/pull/22619), [#22661](https://github.com/laravel/framework/pull/22661))
 - Support multiple levels in `Collection::groupBy()` ([#22630](https://github.com/laravel/framework/pull/22630))
+- Clear user instance in `RequestGuard::setRequest()` ([#22649](https://github.com/laravel/framework/pull/22649))
+- Allow StudlyCase and snake_case migration names ([#22648](https://github.com/laravel/framework/pull/22648))
+- Set `null` as default value for `optional()` helper ([#22699](https://github.com/laravel/framework/pull/22699))
+- Make sure `getRememberToken()` returns a string ([#22724](https://github.com/laravel/framework/pull/22724))
+- Updated Vue preset version ([#22732](https://github.com/laravel/framework/pull/22732))
+- Accept `Arrayable` items in `Collection::find()` ([#22787](https://github.com/laravel/framework/pull/22787))
 
 ### Fixed
 - Close database connection when using `RefreshDatabase` trait ([#22569](https://github.com/laravel/framework/pull/22569))
 - Send status code `500` when using `dd()` ([#22581](https://github.com/laravel/framework/pull/22581))
+- Fixed parameter usage in `RedirectController` ([#22657](https://github.com/laravel/framework/pull/22657))
+- Added `__set_state()` method to `Support/Carbon` ([#22689](https://github.com/laravel/framework/pull/22689))
+- Do not continue checking `APP_ENV` if environment file path being set successfully with `--env` option ([#22753](https://github.com/laravel/framework/pull/22753))
+- Fixed missing table prefix in `SQLiteGrammar::compileDropColumn()` ([#22745](https://github.com/laravel/framework/pull/22745), [c13322c](https://github.com/laravel/framework/commit/c13322c54a20de1417d7bf53e348a601c526bf54))
+- Fixed prefixing in `SQLiteGrammar::compileColumnListing()` ([#22781](https://github.com/laravel/framework/pull/22781))
 
 
 ## v5.5.28 (2017-12-26)
