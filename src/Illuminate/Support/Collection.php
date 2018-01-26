@@ -34,7 +34,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     protected static $proxies = [
         'average', 'avg', 'contains', 'each', 'every', 'filter', 'first', 'flatMap',
-        'keyBy', 'map', 'partition', 'reject', 'sortBy', 'sortByDesc', 'sum',
+        'keyBy', 'map', 'partition', 'reject', 'sortBy', 'sortByDesc', 'sum', 'unique',
     ];
 
     /**
@@ -271,6 +271,8 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function dd(...$args)
     {
+        http_response_code(500);
+
         call_user_func_array([$this, 'dump'], $args);
 
         die(1);
@@ -391,7 +393,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     public function except($keys)
     {
         if ($keys instanceof self) {
-            $keys = $keys->keys()->all();
+            $keys = $keys->all();
         } elseif (! is_array($keys)) {
             $keys = func_get_args();
         }
@@ -642,7 +644,11 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function get($key, $default = null)
     {
-        return Arr::get($this->items, $key, $default);
+        if ($this->offsetExists($key)) {
+            return $this->items[$key];
+        }
+
+        return value($default);
     }
 
     /**
@@ -1058,6 +1064,10 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     {
         if (is_null($keys)) {
             return new static($this->items);
+        }
+
+        if ($keys instanceof self) {
+            $keys = $keys->all();
         }
 
         $keys = is_array($keys) ? $keys : func_get_args();

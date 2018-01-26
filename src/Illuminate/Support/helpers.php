@@ -749,7 +749,7 @@ if (! function_exists('optional')) {
      * @param  mixed  $value
      * @return mixed
      */
-    function optional($value)
+    function optional($value = null)
     {
         return new Optional($value);
     }
@@ -896,7 +896,7 @@ if (! function_exists('str_is')) {
     /**
      * Determine if a given string matches a given pattern.
      *
-     * @param  string  $pattern
+     * @param  string|array  $pattern
      * @param  string  $value
      * @return bool
      */
