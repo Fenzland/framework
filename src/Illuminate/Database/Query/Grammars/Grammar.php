@@ -590,6 +590,13 @@ class Grammar extends BaseGrammar
     protected function compileOrders(Builder $query, $orders)
     {
         if (! empty($orders)) {
+
+            if (! empty($query->groups)) {
+                $orders= array_filter($orders, function ($order) use ($query) {
+                    return in_array($order['column'], $query->groups);
+                });
+            }
+
             return 'order by '.implode(', ', $this->compileOrdersToArray($query, $orders));
         }
 
