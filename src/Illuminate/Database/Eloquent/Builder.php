@@ -69,7 +69,7 @@ class Builder implements QueryBuilderInterface
      */
     protected $passthru = [
         'insert', 'insertGetId', 'getBindings', 'toSql',
-        'exists', 'count', 'min', 'max', 'avg', 'sum', 'getConnection', 'implode',
+        'exists', 'doesntExist', 'count', 'min', 'max', 'avg', 'sum', 'getConnection', 'implode',
     ];
 
     /**

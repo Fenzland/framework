@@ -14,6 +14,7 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\RotatingFileHandler;
+use Monolog\Handler\SlackWebhookHandler;
 
 class LogManager implements LoggerInterface
 {
@@ -66,6 +67,21 @@ class LogManager implements LoggerInterface
     }
 
     /**
+     * Create a new, on-demand aggregate logger instance.
+     *
+     * @param  array  $channels
+     * @param  string|null  $channel
+     * @return \Psr\Log\LoggerInterface
+     */
+    public function stack(array $channels, $channel = null)
+    {
+        return new Logger(
+            $this->createStackDriver(compact('channels', 'channel')),
+            $this->app['events']
+        );
+    }
+
+    /**
      * Get a log channel instance.
      *
      * @param  string|null  $channel
@@ -96,8 +112,8 @@ class LogManager implements LoggerInterface
     protected function get($name)
     {
         try {
-            return $this->stores[$name] ?? with($this->resolve($name), function ($monolog) use ($name) {
-                return $this->tap($name, new Logger($monolog, $this->app['events']));
+            return $this->stores[$name] ?? with($this->resolve($name), function ($logger) use ($name) {
+                return $this->tap($name, new Logger($logger, $this->app['events']));
             });
         } catch (Throwable $e) {
             return tap($this->createEmergencyLogger(), function ($logger) use ($e) {
@@ -201,6 +217,21 @@ class LogManager implements LoggerInterface
     }
 
     /**
+     * Create an aggregate log driver instance.
+     *
+     * @param  array  $config
+     * @return \Psr\Log\LoggerInterface
+     */
+    protected function createStackDriver(array $config)
+    {
+        $handlers = collect($config['channels'])->flatMap(function ($channel) {
+            return $this->channel($channel)->getHandlers();
+        })->all();
+
+        return new Monolog($this->parseChannel($config), $handlers);
+    }
+
+    /**
      * Create an instance of the single file log driver.
      *
      * @param  array  $config
@@ -226,6 +257,28 @@ class LogManager implements LoggerInterface
         return new Monolog($this->parseChannel($config), [
             $this->prepareHandler(new RotatingFileHandler(
                 $config['path'], $config['days'] ?? 7, $this->level($config)
+            )),
+        ]);
+    }
+
+    /**
+     * Create an instance of the Slack log driver.
+     *
+     * @param  array  $config
+     * @return \Psr\Log\LoggerInterface
+     */
+    protected function createSlackDriver(array $config)
+    {
+        return new Monolog($this->parseChannel($config), [
+            $this->prepareHandler(new SlackWebhookHandler(
+                $config['url'],
+                $config['channel'] ?? null,
+                $config['username'] ?? 'Laravel',
+                $config['attachment'] ?? true,
+                $config['emoji'] ?? ':boom:',
+                $config['short'] ?? false,
+                $config['context'] ?? true,
+                $this->level($config)
             )),
         ]);
     }
