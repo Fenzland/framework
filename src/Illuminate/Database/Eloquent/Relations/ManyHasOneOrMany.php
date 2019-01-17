@@ -59,8 +59,10 @@ abstract class ManyHasOneOrMany extends Relation
      */
     public function make(array $attributes = [])
     {
-        return tap($this->related->newInstance($attributes), function ($instance) {
+        return tap($this->related->newInstance(), function ($instance) use($attributes) {
             $instance->setAttribute($this->getForeignKeyName(), $this->getParentKey());
+
+            $instance->fill($attributes);
         });
     }
 
@@ -299,7 +301,7 @@ abstract class ManyHasOneOrMany extends Relation
      */
     public function create(array $attributes)
     {
-        return tap($this->related->newInstance($attributes), function ($instance) {
+        return tap($this->make($attributes), function ($instance) {
             $this->save($instance);
         });
     }
