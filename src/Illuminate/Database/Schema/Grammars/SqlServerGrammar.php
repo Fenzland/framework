@@ -463,6 +463,17 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
+     * Create the column definition for an set type.
+     *
+     * @param  \Illuminate\Support\Fluent  $column
+     * @return string
+     */
+    protected function typeSet(Fluent $column)
+    {
+        return 'nvarchar(max)';
+    }
+
+    /**
      * Create the column definition for a json type.
      *
      * @param  \Illuminate\Support\Fluent  $column

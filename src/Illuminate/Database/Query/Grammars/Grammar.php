@@ -294,6 +294,56 @@ class Grammar extends BaseGrammar
     }
 
     /**
+     * Compile a "where set contains" clause.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereSetContains(Builder $query, $where)
+    {
+        if (empty($where['values'])) {
+            return $where['innerBoolean'] == 'or' ? '1' : '0 = 1';
+        }
+
+        $column = $this->wrap($where['column']);
+
+        return '('.implode(" {$where['innerBoolean']} ", array_map(function($value)use($column){
+            $value = $this->parameter($value);
+
+            return $this->findInSet($value, $column);
+        }, $where['values'])).')';
+    }
+
+    /**
+     * Compile a "where set contains" clause comparing two columns.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereSetContainsColumn(Builder $query, $where)
+    {
+        $column = $this->wrap($where['column']);
+
+        $contained = $this->wrap($where['contained']);
+
+        return $this->findInSet($contained, $column);
+    }
+
+    /**
+     * Helper for whereSetContains
+     *
+     * @param  string  $value
+     * @param  string  $column
+     * @return string
+     */
+    protected function findInSet($value, $column)
+    {
+        return "(concat(',',$column,',') like concat('%',$value,'%'))";
+    }
+
+    /**
      * Compile a "where null" clause.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
@@ -542,6 +592,13 @@ class Grammar extends BaseGrammar
     protected function compileOrders(Builder $query, $orders)
     {
         if (! empty($orders)) {
+
+            if (! empty($query->groups)) {
+                $orders= array_filter($orders, function ($order) use ($query) {
+                    return in_array($order['column'], $query->groups);
+                });
+            }
+
             return 'order by '.implode(', ', $this->compileOrdersToArray($query, $orders));
         }
 

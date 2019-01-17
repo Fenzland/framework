@@ -72,6 +72,10 @@ class MySqlGrammar extends Grammar
         return $this->compileCreateEngine(
             $sql, $connection, $blueprint
         );
+
+        return $this->compileCreateComment(
+            $sql, $connection, $blueprint
+        );
     }
 
     /**
@@ -136,6 +140,23 @@ class MySqlGrammar extends Grammar
             return $sql.' engine = '.$blueprint->engine;
         } elseif (! is_null($engine = $connection->getConfig('engine'))) {
             return $sql.' engine = '.$engine;
+        }
+
+        return $sql;
+    }
+
+    /**
+     * Append the table comment to a command.
+     *
+     * @param  string  $sql
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return string
+     */
+    protected function compileCreateComment($sql, Connection $connection, Blueprint $blueprint)
+    {
+        if (isset($blueprint->comment)) {
+            return $sql.' comment = \''.str_replace("'", '', $blueprint->comment)."'";
         }
 
         return $sql;
@@ -550,6 +571,17 @@ class MySqlGrammar extends Grammar
     protected function typeEnum(Fluent $column)
     {
         return "enum('".implode("', '", $column->allowed)."')";
+    }
+
+    /**
+     * Create the column definition for an set type.
+     *
+     * @param  \Illuminate\Support\Fluent  $column
+     * @return string
+     */
+    protected function typeSet(Fluent $column)
+    {
+        return "set('".implode("', '", $column->allowed)."')";
     }
 
     /**
