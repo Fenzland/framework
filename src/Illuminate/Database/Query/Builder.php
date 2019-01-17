@@ -875,6 +875,24 @@ class Builder implements QueryBuilderInterface
     }
 
     /**
+     * Add a where set contains clause comparing two columns to the query.
+     *
+     * @param  string  $sql
+     * @param  mixed   $values
+     * @param  string  $innerBoolean
+     * @param  string  $boolean
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    public function whereSetContainsColumn($column, $contained, $innerBoolean = 'and', $boolean = 'and')
+    {
+        $type = 'SetContainsColumn';
+
+        $this->wheres[] = compact('type', 'column', 'contained', 'innerBoolean', 'boolean');
+
+        return $this;
+    }
+
+    /**
      * Add a "where null" clause to the query.
      *
      * @param  string  $column

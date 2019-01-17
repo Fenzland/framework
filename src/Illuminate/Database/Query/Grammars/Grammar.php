@@ -316,6 +316,22 @@ class Grammar extends BaseGrammar
     }
 
     /**
+     * Compile a "where set contains" clause comparing two columns.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereSetContainsColumn(Builder $query, $where)
+    {
+        $column = $this->wrap($where['column']);
+
+        $contained = $this->wrap($where['contained']);
+
+        return $this->findInSet($contained, $column);
+    }
+
+    /**
      * Helper for whereSetContains
      *
      * @param  string  $value
